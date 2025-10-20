@@ -1,11 +1,9 @@
-/* ====== ESTILOS GENERALES ====== */
 body {
   margin: 0;
   background-color: #ffffff;
   color: #1a1a1a;
 }
 
-/* ====== NAVBAR ====== */
 .navbar {
   padding-top: 0.4rem;   
   padding-bottom: 0.4rem;
@@ -16,9 +14,8 @@ body {
   width: auto;
 }
 
-/* === NAVBAR PRINCIPAL === */
 .navbar-udem {
-  background-color: #2c2b3f; /* Morado institucional */
+  background-color: #2c2b3f; 
   padding: 1rem 2rem;
   display: flex;
   justify-content: center;
@@ -37,13 +34,11 @@ body {
   align-items: center;
 }
 
-/* Logo */
 .navbar-logo img {
-  height: 80px; /* logo más grande */
+  height: 80px;
   width: auto;
 }
 
-/* Enlace central */
 .navbar-center {
   flex: 1;
   text-align: center;
@@ -64,7 +59,6 @@ body {
   color: #fff;
 }
 
-/* Botones */
 .navbar-buttons {
   display: flex;
   align-items: center;
@@ -99,11 +93,10 @@ body {
   background-color: #c62828;
 }
 
-/* ====== CONTENIDO PRINCIPAL ====== */
 .main-container {
   width: 90%;
   max-width: 1100px;
-  margin: 35px auto 60px; /* margen superior aumentado por navbar fija */
+  margin: 35px auto 60px; 
 }
 
 .main-container h2 {
@@ -123,7 +116,6 @@ body {
   line-height: 1.6;
 }
 
-/* ====== TARJETAS ====== */
 .cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -135,7 +127,7 @@ body {
   position: relative;
   border: 1.5px solid #e5e5f0;
   border-radius: 10px;
-  padding: 25px 28px 40px; /* más espacio abajo */
+  padding: 25px 28px 40px;
   transition: all 0.3s ease;
   background-color: #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
@@ -146,7 +138,6 @@ body {
   box-shadow: 0 0 6px rgba(63, 50, 102, 0.15);
 }
 
-/* ====== ICONO + TÍTULO EN LAS TARJETAS ====== */
 .card-header-icon {
   display: flex;
   align-items: center;
@@ -168,7 +159,7 @@ body {
 }
 
 .card:hover .card-header-icon i {
-  color: #d63b3b; /* efecto hover: icono rojo */
+  color: #d63b3b; 
 }
 
 .card p {
@@ -178,7 +169,6 @@ body {
   margin-bottom: 18px;
 }
 
-/* ====== LINKS EN LAS TARJETAS ====== */
 .card-footer-link {
   position: absolute;
   bottom: 15px;
@@ -198,7 +188,6 @@ body {
   text-decoration: underline;
 }
 
-/* ====== FOOTER ====== */
 .footer {
   margin-top: 60px;
 }
@@ -222,7 +211,6 @@ body {
   margin: 0;
 }
 
-/* ÍCONOS DEL FOOTER */
 .social-icons {
   position: absolute;
   right: 40px;
@@ -234,7 +222,7 @@ body {
 
 .social-icons a {
   color: #2c2b3f;
-  font-size: 18px; /* más pequeño que antes */
+  font-size: 18px; 
   transition: color 0.3s ease;
   text-decoration: none;
 }

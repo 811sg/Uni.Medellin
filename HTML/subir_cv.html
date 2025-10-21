@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subir Hoja de Vida</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    form {
+      background: white;
+      padding: 20px 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      width: 300px;
+    }
+
+    input, button {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #mensaje {
+      margin-top: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Subir hoja de vida</h2>
+
+  <form id="form-cv" enctype="multipart/form-data">
+    <input type="text" name="nombre" placeholder="Tu nombre" required>
+    <input type="email" name="correo" placeholder="Tu correo" required>
+    <input type="file" name="cv" accept=".pdf,.doc,.docx" required>
+    <button type="submit">Subir Hoja de Vida</button>
+  </form>
+
+  <p id="mensaje"></p>
+
+  <script>
+    // Cuando el formulario se envíe
+    document.getElementById("form-cv").addEventListener("submit", async (e) => {
+      e.preventDefault(); // Evita que recargue la página
+
+      const formData = new FormData(e.target);
+
+      try {
+        // Enviar los datos al servidor backend
+        const res = await fetch("http://localhost:3001/upload-cv", {
+          method: "POST",
+          body: formData,
+        });
+
+        const msg = await res.text();
+        document.getElementById("mensaje").textContent = msg;
+
+      } catch (error) {
+        console.error(error);
+        document.getElementById("mensaje").textContent = "Error al conectar con el servidor.";
+      }
+    });
+  </script>
+
+</body>
+</html>

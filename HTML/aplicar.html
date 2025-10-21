@@ -62,35 +62,55 @@
     <h2 class="mb-5">Diligenciar tu hoja de vida</h2>
 
     <div class="row justify-content-center g-4">
-<!-- DESCARGAR -->
-<div class="col-md-4">
-  <div class="upload-box">
-    <i class="bi bi-download"></i>
-    <h5 class="mt-3">Descarga Hoja de Vida</h5>
-    <p>Haz clic en el botón para descargar la plantilla (PDF o DOCX)</p>
-    <a href="/documento/Modelo_Hoja_de_Vida_Monitoria.pdf" download class="btn btn-white">
-      Descargar Archivo
-    </a>
-  </div>
-</div>
-
-
+      <!-- DESCARGAR -->
+      <div class="col-md-4">
+        <div class="upload-box">
+          <i class="bi bi-download"></i>
+          <h5 class="mt-3">Descarga Hoja de Vida</h5>
+          <p>Haz clic en el botón para descargar la plantilla (PDF o DOCX)</p>
+          <a href="/documento/Modelo_Hoja_de_Vida_Monitoria.pdf" download class="btn btn-white">
+            Descargar Archivo
+          </a>
+        </div>
+      </div>
 
       <!-- SUBIR -->
       <div class="col-md-4">
-        <div class="upload-box">
-          <i class="bi bi-upload"></i>
-          <h5 class="mt-3">Sube tu Hoja de Vida</h5>
-          <p>Arrastra y suelta o haz clic para seleccionar archivos (PDF, DOCX)</p>
-          <input type="file" id="archivo" hidden>
-          <button class="btn btn-white" onclick="document.getElementById('archivo').click()">Seleccionar Archivo</button>
-        </div>
+        <form id="form-cv" enctype="multipart/form-data">
+          <div class="upload-box">
+            <i class="bi bi-upload"></i>
+            <h5 class="mt-3">Sube tu Hoja de Vida</h5>
+            <p>Arrastra y suelta o haz clic para seleccionar archivos (PDF, DOCX)</p>
+
+            <!-- Input de archivo -->
+            <input type="file" id="archivo" name="cv" accept=".pdf,.doc,.docx" hidden required>
+            <button type="button" class="btn btn-white" onclick="document.getElementById('archivo').click()">
+              Seleccionar Archivo
+            </button>
+
+            <!-- Campos de información -->
+            <input type="text" name="nombre" class="form-control mt-3" placeholder="Tu nombre" required>
+            <input type="email" name="correo" class="form-control mt-3" placeholder="Tu correo" required>
+          </div>
+        </form>
       </div>
     </div>
 
-    <button class="btn btn-danger mt-5 px-4 py-2">Enviar Solicitud</button>
+    <!-- BOTÓN CENTRADO -->
+    <div class="text-center mt-5">
+      <button type="submit" form="form-cv" class="btn btn-danger px-4 py-2">Enviar Solicitud</button>
+    </div>
+
+    <!-- MENSAJE -->
+    <div id="estado" class="mt-4"></div>
+
+    <div class="progress mt-3" style="height: 10px; display: none;">
+      <div id="barra-progreso" class="progress-bar progress-bar-striped progress-bar-animated"
+           role="progressbar" style="width: 0%;"></div>
+    </div>
   </div>
 </section>
+
 
   <!-- footer -->
 
@@ -120,6 +140,96 @@
 </footer>
 
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+ <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("form-cv");
+  const estado = document.getElementById("estado");
+  const barra = document.getElementById("barra-progreso");
+  const barraContenedor = barra?.parentElement;
+  const botonEnviar = document.querySelector('button[form="form-cv"]');
+
+  if (!form) {
+    console.error("No se encontró el formulario con id='form-cv'");
+    return;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Reiniciar mensajes y progreso
+    estado.innerHTML = "";
+    if (barraContenedor) {
+      barraContenedor.style.display = "block";
+      barra.style.width = "0%";
+    }
+
+    // Desactivar botón temporalmente
+    botonEnviar.disabled = true;
+    botonEnviar.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-2"></span> Enviando...
+    `;
+
+    const formData = new FormData(form);
+
+    try {
+      // Simular avance de carga visual
+      let progreso = 0;
+      const intervalo = setInterval(() => {
+        if (progreso < 90) {
+          progreso += 10;
+          barra.style.width = progreso + "%";
+        }
+      }, 200);
+
+      const res = await fetch("http://localhost:3001/upload-cv", {
+        method: "POST",
+        body: formData,
+      });
+
+      clearInterval(intervalo);
+      barra.style.width = "100%";
+      const msg = await res.text();
+
+      // Mostrar alerta visual de éxito o error
+      if (res.ok) {
+        estado.innerHTML = `
+          <div class="alert alert-success alert-dismissible fade show mt-4 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>¡Éxito!</strong> ${msg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        `;
+      } else {
+        estado.innerHTML = `
+          <div class="alert alert-warning alert-dismissible fade show mt-4 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Atención:</strong> ${msg}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        `;
+      }
+    } catch (error) {
+      estado.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show mt-4 shadow-sm" role="alert">
+          <i class="bi bi-x-circle-fill me-2"></i>
+          <strong>Error:</strong> No se pudo conectar con el servidor.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+    } finally {
+      // Restaurar botón
+      botonEnviar.disabled = false;
+      botonEnviar.innerHTML = "Enviar Solicitud";
+
+      // Ocultar barra tras unos segundos
+      setTimeout(() => {
+        if (barraContenedor) barraContenedor.style.display = "none";
+      }, 2000);
+    }
+  });
+});
+</script>
+
+
 </body>
 </html>

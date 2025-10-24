@@ -1,0 +1,311 @@
+.navbar {
+  padding-top: 0.4rem;   
+  padding-bottom: 0.4rem;
+}
+
+
+.logo-udem {
+  height: 80px; 
+  width: auto;
+}
+
+
+.navbar-nav {
+  gap: 2.5rem; 
+}
+
+
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #000 !important;
+  transition: color 0.3s ease;
+}
+
+
+.nav-link:hover {
+  color: #c70000 !important;
+}
+
+
+.btn-danger {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+
+.perfil-usuario {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.perfil-usuario i {
+  font-size: 1.7rem;
+  color: #000;
+}
+
+
+.user-name {
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
+
+.perfil-section {
+  background-color: #fff;
+  min-height: 100vh;
+  padding: 60px 80px;
+}
+
+.card-perfil {
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 40px;
+}
+
+.perfil-foto {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.perfil-nombre {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.perfil-carrera,
+.perfil-periodo {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+
+.perfil-descripcion .texto-descripcion {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+
+.titulo-seccion {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.card-habilidades {
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 40px;
+  background-color: #fff;
+}
+
+.habilidad {
+  border-radius: 25px;
+  background-color: #f2f2f2;
+  color: #333;
+  padding: 6px 14px;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+
+.card-contacto {
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 25px;
+  background-color: #fff;
+}
+
+.correo {
+  color: #d32626 !important;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.estado .circulo {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #f19a9a;
+  box-shadow: 0 0 5px rgba(240, 110, 110, 0.4);
+}
+
+.estado-texto {
+  background-color: #fdecec;
+  color: #a71d1d;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+
+.card-testimonios {
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 25px;
+  background-color: #fff;
+}
+
+.texto-testimonio {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+.card-testimonios .fw-semibold {
+  font-size: 0.9rem;
+  color: #222;
+}
+
+
+.monitores-section {
+  background-color: #fff;
+  padding: 60px 80px;
+  text-align: center;
+}
+
+.monitores-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 3rem;
+}
+
+.btn-volver {
+  display: inline-block;
+  border: 1.8px solid #d32626;
+  color: #d32626;
+  font-weight: 500;
+  padding: 10px 28px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-bottom: 2.5rem;
+  font-size: 1rem;
+}
+
+.btn-volver:hover {
+  background-color: #d32626;
+  color: #fff;
+}
+
+.monitores-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 40px;
+}
+
+.card-monitor {
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  width: 340px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-monitor:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+}
+
+.card-monitor img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+
+.card-body {
+  padding: 24px;
+}
+
+.monitor-nombre {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.monitor-facultad {
+  font-size: 0.95rem;
+  color: #777;
+  margin-bottom: 18px;
+}
+
+.btn-detalles {
+  display: inline-block;
+  border: 1.8px solid #d32626;
+  color: #d32626;
+  font-weight: 500;
+  padding: 8px 22px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-detalles:hover {
+  background-color: #d32626;
+  color: #fff;
+}
+
+
+.footer-bottom {
+  background-color: white;
+  color: #2c2b3f;
+  padding: 12px 60px;
+  font-size: 0.85rem;
+  position: relative;
+  border-top: 1px solid #eee;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: #444;
+  text-align: center;
+}
+
+.footer-bottom .social-icons {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 20px;
+}
+
+.footer-bottom .social-icons a {
+  color: #2c2b3f;
+  font-size: 1.05rem;
+  transition: color 0.3s ease;
+  text-decoration: none;
+}
+
+.footer-bottom .social-icons a:hover {
+  color: #e14b4b;
+}
+
+
+

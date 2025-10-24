@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>U.Medellín</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" href="logo.png" type="image/x-icon">
+  <link rel="stylesheet" href="/CSS/monitoria.css">
+</head>
+
+<body>
+  <!-- Barra de Navegación -->
+  <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm">
+    <div class="container-fluid px-5">
+      <a class="navbar-brand" href="/HTML/principal.html">
+        <img src="/IMG/Selection.png" alt="Logo" class="logo-udem">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+        <ul class="navbar-nav mx-auto align-items-center gap-5">
+          <li class="nav-item"><a class="nav-link" href="/HTML/principal.html">Inicio</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Monitores</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Convocatorias</a></li>
+          <li class="nav-item"><a class="nav-link" href="/HTML/aplicar.html">Aplicar</a></li>
+          <li class="nav-item"><a class="nav-link" href="/HTML/info.html">Información</a></li>
+          <li class="nav-item">
+            <a href="/HTML/p-profesores.html" class="btn btn-danger px-4">Panel de Profesores</a>
+          </li>
+        </ul>
+        <div class="text-center perfil-usuario">
+          <i class="bi bi-person-circle"></i>
+          <p class="user-name">Nombre</p>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+
+
+<section class="seccion-anuncios text-center">
+  <div class="container">
+    <h2 class="titulo-monitorias">Encuentra tu Monitoría Académica</h2>
+    <p class="descripcion-monitorias">
+    Explora las convocatorias de monitoría por curso y semestre. Utiliza nuestro filtro inteligente para encontrar la oportunidad perfecta para ti.
+    </p>
+
+
+    <div class="row justify-content-center">
+      <!-- Monitores para POO -->
+      <div class="col-md-4 mb-4">
+        <div class="anuncio-card p-4">
+          <div class="anuncio-img">
+            <img src="/IMG/poo.png" alt="Monitores para POO">
+          </div>
+          <h5 class="fw-semibold mt-3">Monitores para POO</h5>
+          <p><i class="bi bi-mortarboard"></i> Ingeniería</p>
+          <p><i class="bi bi-calendar-event"></i> 2025-2</p>
+          <p>Buscamos estudiantes proactivos y con excelentes conocimientos en algoritmos y estructuras de datos para apoyar a sus compañeros en el curso de Fundamentos de Programación.</p>
+          <div class="text-center mt-4">
+            <a href="#" class="btn-detalles">Ver Detalles</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitores de Derecho Constitucional -->
+      <div class="col-md-4 mb-4">
+        <div class="anuncio-card p-4">
+          <div class="anuncio-img">
+            <img src="/IMG/derecho.png" alt="Derecho Constitucional">
+          </div>
+          <h5 class="fw-semibold mt-3">Monitores de Derecho Constitucional</h5>
+          <p><i class="bi bi-mortarboard"></i> Derecho</p>
+          <p><i class="bi bi-calendar-event"></i> 2025-2</p>
+          <p>Oportunidad para monitores en Derecho Constitucional, brindando apoyo en la comprensión de jurisprudencia y doctrina.</p>
+          <div class="text-center mt-4">
+            <a href="#" class="btn-detalles">Ver Detalles</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitores de Matemáticas Avanzadas -->
+      <div class="col-md-4 mb-4">
+        <div class="anuncio-card p-4">
+          <div class="anuncio-img">
+            <img src="/IMG/matematicas.png" alt="Matemáticas Avanzadas">
+          </div>
+          <h5 class="fw-semibold mt-3">Monitores de Matemáticas Avanzadas</h5>
+          <p><i class="bi bi-mortarboard"></i> Ciencias Básicas</p>
+          <p><i class="bi bi-calendar-event"></i> 2025-2</p>
+          <p>Se requieren monitores con habilidades sólidas en cálculo y álgebra lineal para guiar a estudiantes en cursos de nivel superior.</p>
+          <div class="text-center mt-4">
+            <a href="#" class="btn-detalles">Ver Detalles</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+  <section class="seccion-convocatorias py-5">
+    <div class="container">
+      <h2 class="text-center mb-4 fw-bold">Filtra Convocatorias</h2>
+
+      <!-- Filtros -->
+      <div class="row justify-content-center mb-5">
+        <div class="col-md-3 mb-2">
+          <select id="filtroCurso" class="form-select">
+            <option value="">Todos los Cursos</option>
+            <option value="Matemáticas">Matemáticas</option>
+            <option value="Programación">Programación</option>
+            <option value="Física">Física</option>
+            <option value="Economía">Economía</option>
+            <option value="Diseño">Diseño</option>
+            <option value="Inglés">Inglés</option>
+          </select>
+        </div>
+        <div class="col-md-3 mb-2">
+          <select id="filtroSemestre" class="form-select">
+            <option value="">Todos los Semestres</option>
+            <option value="2024-2">Semestre 2024-2</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <input id="busqueda" type="text" class="form-control" placeholder="Filtrar por palabra clave...">
+        </div>
+      </div>
+
+      <!-- Convocatorias -->
+      <h3 class="fw-bold mb-4">Convocatorias Disponibles</h3>
+      <div id="listaConvocatorias" class="row g-4">
+
+        <!-- Tarjeta 1 -->
+        <div class="col-md-4 convocatoria" data-curso="Matemáticas">
+          <div class="card h-100 shadow-sm">
+            <img src="/IMG/1.png" class="card-img-top" alt="Matemáticas">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">Semestre 2024-2</span>
+              <h5 class="card-title">Monitoría de Matemáticas Avanzadas</h5>
+              <p class="card-text">Apoya a estudiantes en cálculo multivariable y ecuaciones diferenciales. Requiere habilidades de tutoría y explicación clara de conceptos.</p>
+              <p><strong>Requisitos:</strong> Promedio ≥ 4.0 en matemáticas. Disponibilidad de 10 h/semana.</p>
+              <p class="text-muted small"><i class="bi bi-calendar-event"></i> Fecha límite: 2024-08-15</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <button class="btn btn-dark w-100"><i class="bi bi-send-fill"></i> Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2 -->
+        <div class="col-md-4 convocatoria" data-curso="Programación">
+          <div class="card h-100 shadow-sm">
+            <img src="/IMG/2.png" class="card-img-top" alt="Programación">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">Semestre 2024-2</span>
+              <h5 class="card-title">Monitoría de Programación Orientada a Objetos</h5>
+              <p class="card-text">Asiste en laboratorios de POO con Java y Python, ayudando a depurar código y comprender patrones de diseño.</p>
+              <p><strong>Requisitos:</strong> Dominio de Java y Python. Habilidades de resolución de problemas.</p>
+              <p class="text-muted small"><i class="bi bi-calendar-event"></i> Fecha límite: 2024-08-15</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <button class="btn btn-dark w-100"><i class="bi bi-send-fill"></i> Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 3 -->
+        <div class="col-md-4 convocatoria" data-curso="Física">
+          <div class="card h-100 shadow-sm">
+            <img src="/IMG/3.png" class="card-img-top" alt="Física">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">Semestre 2024-2</span>
+              <h5 class="card-title">Monitoría de Física Clásica</h5>
+              <p class="card-text">Apoya en conceptos de mecánica, termodinámica y electromagnetismo. Ayuda en resolución de problemas prácticos.</p>
+              <p><strong>Requisitos:</strong> Promedio ≥ 4.2 en Física. Experiencia previa en tutorías.</p>
+              <p class="text-muted small"><i class="bi bi-calendar-event"></i> Fecha límite: 2024-08-15</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <button class="btn btn-dark w-100"><i class="bi bi-send-fill"></i> Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 4 -->
+        <div class="col-md-4 convocatoria" data-curso="Economía">
+          <div class="card h-100 shadow-sm">
+            <img src="/IMG/4.png" class="card-img-top" alt="Economía">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">Semestre 2024-2</span>
+              <h5 class="card-title">Monitoría de Economía Aplicada</h5>
+              <p class="card-text">Facilita la comprensión de modelos económicos, análisis de datos y políticas públicas.</p>
+              <p><strong>Requisitos:</strong> Conocimientos sólidos en micro y macroeconomía.</p>
+              <p class="text-muted small"><i class="bi bi-calendar-event"></i> Fecha límite: 2024-08-15</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <button class="btn btn-dark w-100"><i class="bi bi-send-fill"></i> Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 5 -->
+        <div class="col-md-4 convocatoria" data-curso="Diseño">
+          <div class="card h-100 shadow-sm">
+            <img src="/IMG/5.png" class="card-img-top" alt="Diseño">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">Semestre 2024-2</span>
+              <h5 class="card-title">Monitoría de Diseño Gráfico Digital</h5>
+              <p class="card-text">Ofrece guía en el uso de herramientas gráficas (Adobe Creative Suite) y principios de composición y teoría del color.</p>
+              <p><strong>Requisitos:</strong> Manejo de Photoshop e Illustrator.</p>
+              <p class="text-muted small"><i class="bi bi-calendar-event"></i> Fecha límite: 2024-08-15</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <button class="btn btn-dark w-100"><i class="bi bi-send-fill"></i> Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 6 -->
+        <div class="col-md-4 convocatoria" data-curso="Inglés">
+          <div class="card h-100 shadow-sm">
+            <img src="/IMG/6.png" class="card-img-top" alt="Inglés">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">Semestre 2024-2</span>
+              <h5 class="card-title">Monitoría de Idioma Inglés Avanzado</h5>
+              <p class="card-text">Ayuda a estudiantes a mejorar sus habilidades de escritura, lectura y conversación en inglés.</p>
+              <p><strong>Requisitos:</strong> Nivel C1 de inglés o certificado equivalente.</p>
+              <p class="text-muted small"><i class="bi bi-calendar-event"></i> Fecha límite: 2024-08-15</p>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+              <button class="btn btn-dark w-100"><i class="bi bi-send-fill"></i> Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+   <script src="/JS/monitoria.js"></script>
+
+    <footer class="footer-bottom">
+  <p>Universidad de Medellín 2025. All copy rights.</p>
+  <div class="social-icons">
+    <a href="#"><i class="bi bi-facebook"></i></a>
+    <a href="#"><i class="bi bi-twitter"></i></a>
+    <a href="#"><i class="bi bi-linkedin"></i></a>
+    <a href="#"><i class="bi bi-instagram"></i></a>
+  </div>
+</footer>

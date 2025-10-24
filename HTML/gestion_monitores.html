@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Monitores</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" href="/IMG/" type="image/x-icon">
+  <link rel="stylesheet" href="/CSS/gestion_monitores.css">
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar-udem">
+    <div class="navbar-container">
+      <div class="navbar-logo">
+        <img src="/IMG/Selection.png" alt="Universidad de Medellín" class="logo-udem">
+      </div>
+      <div class="navbar-center">
+        <a href="#" class="nav-link">Postulaciones recibidas</a>
+        <a href="#" class="nav-link">Monitores activos</a>
+        <a href="#" class="nav-link">Solicitar monitores</a>
+        <a href="#" class="nav-link">Reportes</a>
+      </div>
+
+      <div class="navbar-buttons">
+        <a href="/HTML/p-profesores.html" class="btn btn-secondary">Panel del Profesor</a>
+        <button type="button" class="btn btn-danger">Cerrar Sesión</button>
+      </div>
+
+    </div>
+  </nav>
+
+<section class="panel-gestion container my-5">
+  <div class="row align-items-center">
+    <div class="col-md-6">
+      <h2 class="fw-bold text-dark mb-3">Panel de Gestión de<br>Monitores</h2>
+      <p class="text-secondary">
+        Una visión integral del rendimiento y cumplimiento de los monitores de la Universidad de Medellín.
+        Manténgase al tanto de métricas clave y acciones pendientes para asegurar la excelencia académica.
+      </p>
+    </div>
+
+    <div class="col-md-6 text-center">
+      <img src="/IMG/gestion.png" alt="Panel de gestión de monitores" class="img-fluid">
+    </div>
+  </div>
+</section>
+
+
+<!-- ALERTAS URGENTES -->
+<section class="alertas-container">
+  <h2>Alertas Urgentes para Monitores</h2>
+  <div class="alertas">
+    
+    <!-- Alerta Roja -->
+    <div class="alerta alerta-roja">
+      <div class="titulo-alerta">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <h4>Compromisos Críticos Pendientes</h4>
+      </div>
+      <p>Se detectaron 3 compromisos de monitoría con un plazo de entrega vencido o próximo a vencer. Revise y gestione de inmediato.</p>
+      <button>Revisar Compromisos <span>›</span></button>
+    </div>
+
+    <!-- Alerta Amarilla -->
+    <div class="alerta alerta-amarilla">
+      <div class="titulo-alerta">
+        <i class="bi bi-hourglass-split"></i>
+        <h4>Monitores con Horas Insuficientes</h4>
+      </div>
+      <p>5 monitores no han alcanzado el mínimo de horas trabajadas para el mes actual. Se requiere seguimiento y ajuste.</p>
+      <button>Gestionar Horas <span>›</span></button>
+    </div>
+
+    <!-- Alerta Azul -->
+    <div class="alerta alerta-azul">
+      <div class="titulo-alerta">
+        <i class="bi bi-graph-down-arrow"></i>
+        <h4>Evaluación de Desempeño Baja</h4>
+      </div>
+      <p>2 monitores muestran una tendencia decreciente en su evaluación de desempeño en el último trimestre. Acciones correctivas.</p>
+      <button>Evaluar Desempeño <span>›</span></button>
+    </div>
+
+  </div>
+</section>
+
+<!-- MÉTRICAS CLAVE -->
+<section class="metricas-container">
+  <h2>Métricas Clave del Monitor</h2>
+  <div class="metricas">
+    <div class="metrica">
+      <h5>Monitores Activos</h5>
+      <h3>45</h3>
+      <span class="positivo">+3% este mes</span>
+    </div>
+
+    <div class="metrica">
+      <h5>Compromisos Pendientes</h5>
+      <h3>8</h3>
+      <span class="negativo">+1 a la semana pasada</span>
+    </div>
+
+    <div class="metrica">
+      <h5>Horas Promedio/Monitor</h5>
+      <h3>18.5 hrs</h3>
+      <span class="positivo">+0.7 hrs vs. anterior</span>
+    </div>
+
+    <div class="metrica">
+      <h5>Puntuación de Desempeño</h5>
+      <h3>87/100</h3>
+      <span class="negativo">-2 pts el último trimestre</span>
+    </div>
+  </div>
+</section>
+
+
+<section class="analisis-section container my-5">
+  <h2 class="fw-bold text-dark mb-4">Análisis de Cumplimiento y Rendimiento</h2>
+
+  <div class="row g-4 justify-content-center">
+    <!-- Tarjeta 1 -->
+    <div class="col-md-5">
+      <div class="card-analisis shadow-sm">
+        <div class="card-header-analisis">
+          <h6>Cumplimiento Horas Trabajadas</h6>
+        </div>
+        <div class="card-body-analisis">
+          <p class="mes">Septiembre</p>
+          <p><strong>Horas previstas:</strong> 80 hrs</p>
+          <p><strong>Horas realizadas:</strong> 76 hrs</p>
+        </div>
+        <div class="card-footer-analisis">
+          <a href="#" class="btn-historial">Ver historial anterior</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta 2 -->
+    <div class="col-md-5">
+      <div class="card-analisis shadow-sm">
+        <div class="card-header-analisis">
+          <h6>Evolución de Puntuación de Desempeño</h6>
+        </div>
+        <div class="card-body-analisis">
+          <p><strong>Agosto:</strong> 85/100</p>
+          <p><strong>Septiembre:</strong> 89/100</p>
+          <p><strong>Octubre:</strong> 91/100</p>
+          <p><strong>Noviembre:</strong> 88/100</p>
+          <p><strong>Valoración total:</strong> 88.3</p>
+        </div>
+        <div class="card-footer-analisis">
+          <a href="#" class="btn-historial">Ver historial anterior</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta 3 -->
+    <div class="col-md-5">
+      <div class="card-analisis shadow-sm">
+        <div class="card-header-analisis">
+          <h6>Estado de Compromisos del Mes</h6>
+        </div>
+        <div class="card-body-analisis">
+          <p class="mes">Septiembre</p>
+          <p><strong>Tareas completadas:</strong> 12</p>
+          <p><strong>Tareas retrasadas:</strong> 3</p>
+          <p><strong>Tareas pendientes:</strong> 2</p>
+        </div>
+        <div class="card-footer-analisis">
+          <a href="#" class="btn-historial">Ver historial anterior</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+  <!-- FOOTER -->
+<footer class="footer-udem mt-5">
+  <div class="container footer-container">
+    <div class="footer-top d-flex justify-content-between align-items-center flex-wrap">
+      <div class="footer-logo d-flex align-items-center">
+        <img src="/IMG/Selection.png" alt="Universidad de Medellín" class="footer-img">
+      </div>
+      <div class="footer-links d-flex gap-4">
+        <a href="#" class="footer-link">Recursos</a>
+        <a href="#" class="footer-link">Legal</a>
+        <a href="#" class="footer-link">Contacto</a>
+      </div>
+    </div>
+
+    <hr class="footer-divider">
+    <div class="footer-bottom d-flex justify-content-between align-items-center flex-wrap">
+      <p class="footer-copy m-0">
+        Universidad de Medellín 2025. All copy rights.
+      </p>
+
+      <div class="footer-social d-flex gap-3">
+        <a href="#"><i class="bi bi-facebook"></i></a>
+        <a href="#"><i class="bi bi-twitter-x"></i></a>
+        <a href="#"><i class="bi bi-linkedin"></i></a>
+        <a href="#"><i class="bi bi-youtube"></i></a>
+        <a href="#"><i class="bi bi-instagram"></i></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+</body>
+</html>

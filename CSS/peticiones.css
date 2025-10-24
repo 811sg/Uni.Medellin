@@ -234,7 +234,6 @@ body {
 .modal-content {
   border-radius: 14px;
   padding: 5px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .modal-header .modal-title {
@@ -292,7 +291,6 @@ body {
   color: #2c2b3f;
   padding: 12px 60px;
   font-size: 0.85rem;
-  font-family: 'Poppins', sans-serif;
   position: relative;
   border-top: 1px solid #eee;
 }
@@ -323,18 +321,5 @@ body {
   color: #e14b4b;
 }
 
-@media (max-width: 576px) {
-  .footer-bottom {
-    padding: 15px 20px;
-    text-align: center;
-  }
-
-  .footer-bottom .social-icons {
-    position: static;
-    justify-content: center;
-    transform: none;
-    margin-top: 8px;
-  }
-}
 
 

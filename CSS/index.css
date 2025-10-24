@@ -103,21 +103,6 @@
 }
 
 
-@media (max-width: 768px) {
-  .hero-banner {
-    height: 350px;
-    max-width: 100%;
-    border-radius: 0;
-  }
-
-  .hero-banner h1 {
-    font-size: 2rem;
-  }
-
-  .hero-banner p {
-    font-size: 1rem;
-  }
-}
 
 .info-monitorias {
   max-width: 900px;
@@ -402,6 +387,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
+  text-decoration: none;
 }
 
 .faq-btn:hover {
@@ -417,21 +403,6 @@
   box-shadow: none;
 }
 
-@media (max-width: 768px) {
-  .faq-container {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .faq-card {
-    width: 90%;
-  }
-
-  .faq-img {
-    width: 90%;
-    height: 150px;
-  }
-}
 
 .testimonios-section {
   background-color: #fff;
@@ -508,28 +479,11 @@
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-
-@media (max-width: 768px) {
-  .testimonio-card {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .testimonio-img {
-    margin: 0 auto 15px auto;
-  }
-
-  .testimonio-content {
-    text-align: center;
-  }
-}
-
 .footer {
   background-color: #2c2b3f;
   color: white;
   text-align: center;
   padding: 40px 20px 0 20px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .footer-content {

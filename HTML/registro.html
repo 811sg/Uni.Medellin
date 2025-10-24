@@ -11,25 +11,28 @@
   <div class="background">
     <div class="overlay"></div>
 
-<div class="info-card" id="infoCard">
-  <button class="close-btn" id="closeInfo"><i class="bi bi-x-lg"></i></button>
-  <img src="/IMG/logo.png" alt="UDEM" class="logo">
-  <h3>Información</h3>
-  <div class="info-content">
-    <p>
-      En este sitio web podrás consultar toda la información sobre las monitorías de la Universidad de Medellín, 
-      conocer los programas disponibles, los horarios y acceder fácilmente a recursos que apoyen tu proceso académico.
-    </p>
-    <p>
-      Si eres docente, podrás gestionar tus monitorías, revisar postulaciones, consultar monitores activos, 
-      solicitar nuevos monitores y acceder a reportes y recursos institucionales.
-    </p>
-  </div>
-</div>
+    <!-- Tarjeta de información (oculta al inicio) -->
+    <div class="info-card hidden" id="infoCard">
+      <button class="close-btn" id="closeInfo"><i class="bi bi-x-lg"></i></button>
+      <img src="/IMG/logo.png" alt="UDEM" class="logo">
+      <h3>Información</h3>
+      <div class="info-content">
+        <p>
+          En este sitio web podrás consultar toda la información sobre las monitorías de la Universidad de Medellín, 
+          conocer los programas disponibles, los horarios y acceder fácilmente a recursos que apoyen tu proceso académico.
+        </p>
+        <p>
+          Si eres docente, podrás gestionar tus monitorías, revisar postulaciones, consultar monitores activos, 
+          solicitar nuevos monitores y acceder a reportes y recursos institucionales.
+        </p>
+      </div>
+    </div>
 
-
-    <!-- Tarjeta de inicio de sesión -->
-    <div class="login-card hidden" id="loginCard">
+    <!-- Tarjeta de inicio de sesión (visible al inicio) -->
+    <div class="login-card" id="loginCard">
+      <button class="info-btn" id="openInfo" title="Información">
+        <i class="bi bi-info-circle-fill"></i>
+      </button>
       <img src="/IMG/logo.png" alt="UDEM" class="logo">
       <h3>Bienvenid@<br>Monitores UDEM</h3>
       <form id="loginForm">
@@ -40,6 +43,7 @@
         <button type="button" class="btn btn-registrarse" id="openRegister">Registrarse</button>
       </form>
     </div>
+
 
     <!-- Tarjeta de registro -->
     <div class="register-card hidden" id="registerCard">
@@ -66,7 +70,6 @@
         <button type="submit" class="btn btn-acceder">Confirmar</button>
       </form>
     </div>
-
   </div>
 
   <footer class="footer-bottom">

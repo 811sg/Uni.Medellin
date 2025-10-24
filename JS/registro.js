@@ -8,18 +8,31 @@ const registerForm = document.getElementById('registerForm');
 const loginForm = document.getElementById('loginForm');
 const recoverForm = document.getElementById('recoverForm');
 const forgotLink = document.querySelector('.forgot');
+const openInfo = document.getElementById('openInfo');
 
-// Cierra info y abre login
+
+// 🔹 Abre la información desde el ícono dentro del login
+openInfo.addEventListener('click', () => {
+  loginCard.classList.add('fade-out');
+  setTimeout(() => {
+    loginCard.classList.add('hidden');
+    infoCard.classList.remove('hidden', 'fade-out');
+    infoCard.classList.add('fade-in');
+  }, 400);
+});
+
+// 🔹 Cierra información y vuelve al login
 closeInfo.addEventListener('click', () => {
   infoCard.classList.add('fade-out');
   setTimeout(() => {
-    infoCard.style.display = 'none';
+    infoCard.classList.add('hidden');
     loginCard.classList.remove('hidden', 'fade-out');
     loginCard.classList.add('fade-in');
   }, 400);
 });
 
-// Abre registro desde login
+
+// 🔹 Abre registro desde login
 openRegister.addEventListener('click', () => {
   loginCard.classList.add('fade-out');
   setTimeout(() => {
@@ -29,7 +42,7 @@ openRegister.addEventListener('click', () => {
   }, 400);
 });
 
-// Cuando se envía el formulario de registro, vuelve al login
+// 🔹 Cuando se envía el formulario de registro, vuelve al login
 registerForm.addEventListener('submit', (e) => {
   e.preventDefault();
   registerCard.classList.add('fade-out');
@@ -40,7 +53,7 @@ registerForm.addEventListener('submit', (e) => {
   }, 400);
 });
 
-// Cuando se inicia sesión, redirige a principal.html
+// 🔹 Cuando se inicia sesión, redirige a principal.html
 loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
   loginCard.classList.add('fade-out');
@@ -60,7 +73,7 @@ forgotLink.addEventListener('click', (e) => {
   }, 400);
 });
 
-// 🔹 Al confirmar, vuelve al login
+// 🔹 Al confirmar recuperación, vuelve al login
 recoverForm.addEventListener('submit', (e) => {
   e.preventDefault();
   recoverCard.classList.add('fade-out');

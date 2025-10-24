@@ -209,3 +209,22 @@ input {
 .social-icons i:hover {
   color: #e14b4b;
 }
+
+
+/* ===== Icono de información ===== */
+/* ===== Icono de información dentro de la tarjeta ===== */
+.info-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #2c2b3f;
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.info-btn:hover {
+  color: #40345e;
+}

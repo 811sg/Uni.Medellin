@@ -1,0 +1,311 @@
+.navbar {
+  padding-top: 0.4rem;   
+  padding-bottom: 0.4rem;
+}
+
+
+.logo-udem {
+  height: 80px; 
+  width: auto;
+}
+
+
+.navbar-nav {
+  gap: 2.5rem; 
+}
+
+
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #000 !important;
+  transition: color 0.3s ease;
+}
+
+
+.nav-link:hover {
+  color: #c70000 !important;
+}
+
+
+.btn-danger {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+
+.perfil-usuario {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.perfil-usuario i {
+  font-size: 1.7rem;
+  color: #000;
+}
+
+
+.user-name {
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
+
+.perfil-section {
+  background-color: #fff;
+  min-height: 100vh;
+  padding: 60px 80px;
+}
+
+
+/* ======== Sección Derecho Constitucional ======== */
+.convocatoria-section {
+  background-color: #fff;
+  padding: 80px 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container-convocatoria {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1100px;
+  width: 100%;
+  gap: 60px;
+}
+
+.texto-convocatoria {
+  flex: 1;
+  text-align: left;
+}
+
+.texto-convocatoria h2 {
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.texto-convocatoria p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.texto-convocatoria .destacado {
+  font-style: italic;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.btn-aplicar {
+  display: inline-block;
+  background-color: #d32626;
+  color: #fff;
+  font-weight: 500;
+  padding: 10px 26px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-aplicar:hover {
+  background-color: #b91c1c;
+}
+
+.imagen-convocatoria img {
+  width: 600px;
+  height: auto;
+  border-radius: 3px;
+}
+
+/* ======== Sección ¿Por Qué Ser Monitor? ======== */
+.por-que-section {
+  background-color: #fff6f6;
+  padding: 80px 120px;
+  display: flex;
+  justify-content: center;
+}
+
+.por-que-container {
+  background-color: #fff6f6;
+  border-radius: 8px;
+  max-width: 850px;
+  text-align: center;
+  padding: 50px 60px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.por-que-container h2 {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1.2rem;
+}
+
+.por-que-container p {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.beneficios-lista {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+  display: inline-block;
+}
+
+.beneficios-lista li {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.beneficios-lista i {
+  color: #d32626;
+  font-size: 1.1rem;
+}
+
+
+.monitores-section {
+  background-color: #fff;
+  padding: 60px 80px;
+  text-align: center;
+}
+
+.monitores-section h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 3rem;
+}
+
+.btn-volver {
+  display: inline-block;
+  border: 1.8px solid #d32626;
+  color: #d32626;
+  font-weight: 500;
+  padding: 10px 28px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  margin-bottom: 2.5rem;
+  font-size: 1rem;
+}
+
+.btn-volver:hover {
+  background-color: #d32626;
+  color: #fff;
+}
+
+.monitores-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 40px;
+}
+
+.card-monitor {
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+  width: 340px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-monitor:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+}
+
+.card-monitor img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+
+.card-body {
+  padding: 24px;
+}
+
+.monitor-nombre {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.monitor-facultad {
+  font-size: 0.95rem;
+  color: #777;
+  margin-bottom: 18px;
+}
+
+.btn-detalles {
+  display: inline-block;
+  border: 1.8px solid #d32626;
+  color: #d32626;
+  font-weight: 500;
+  padding: 8px 22px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-detalles:hover {
+  background-color: #d32626;
+  color: #fff;
+}
+
+
+.footer-bottom {
+  background-color: white;
+  color: #2c2b3f;
+  padding: 12px 60px;
+  font-size: 0.85rem;
+  position: relative;
+  border-top: 1px solid #eee;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: #444;
+  text-align: center;
+}
+
+.footer-bottom .social-icons {
+  position: absolute;
+  right: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 20px;
+}
+
+.footer-bottom .social-icons a {
+  color: #2c2b3f;
+  font-size: 1.05rem;
+  transition: color 0.3s ease;
+  text-decoration: none;
+}
+
+.footer-bottom .social-icons a:hover {
+  color: #e14b4b;
+}
+
+
+

@@ -23,10 +23,17 @@
         <a href="/HTML/principal.html" class="nav-link active">Inicio</a>
       </div>
 
-      <div class="navbar-buttons">
-        <button type="button" class="btn btn-secondary">Vista de Estudiante</button>
-        <button type="button" class="btn btn-danger">Cerrar sesión</button>
-      </div>
+          <div class="text-center perfil-usuario" id="perfilUsuario">
+            <i class="bi bi-person-circle"></i>
+            <p class="user-name">Nombre</p>
+
+            <!-- 🔹 Menú desplegable -->
+            <div id="logoutContainer" class="logout-container hidden">
+              <a href="/HTML/registro.html" id="logout" class="logout-btn">
+                <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+              </a>
+            </div>
+          </div>
     </div>
   </nav>
 
@@ -113,5 +120,6 @@
     <div class="footer-bottom"></div>
   </footer>
 
+  <script src="/JS/rolControl.js"></script>
 </body>
 </html>

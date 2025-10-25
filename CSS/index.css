@@ -54,6 +54,76 @@
   font-weight: 500;
 }
 
+/* 🔹 Perfil de usuario */
+.perfil-usuario {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.perfil-usuario i {
+  font-size: 1.9rem;
+  color: #d92332;
+  transition: transform 0.2s ease;
+}
+
+.perfil-usuario:hover i {
+  transform: scale(1.08);
+}
+
+.perfil-usuario .user-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #000;
+  margin-top: 2px;
+}
+
+/* 🔹 Contenedor del botón */
+.logout-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  top: 100%;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  padding: 6px 10px;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+}
+
+/* 🔹 Mostrar con animación */
+.logout-container.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(4px);
+  pointer-events: auto;
+}
+
+/* 🔹 Botón Cerrar sesión */
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  background: linear-gradient(135deg, #ffa0a7, #ff8793);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 6px rgba(217, 35, 50, 0.25);
+  transition: all 0.25s ease;
+}
+
+.logout-btn:hover {
+  background: linear-gradient(135deg, #c01b29, #901020);
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(217, 35, 50, 0.35);
+}
+
+
 .hero-banner {
   position: relative;
   height: 450px;

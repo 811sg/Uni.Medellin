@@ -27,7 +27,17 @@
 
       <div class="navbar-buttons">
         <a href="/HTML/p-profesores.html" class="btn btn-secondary">Panel del Profesor</a>
-        <button type="button" class="btn btn-danger">Cerrar Sesión</button>
+                  <div class="text-center perfil-usuario" id="perfilUsuario">
+            <i class="bi bi-person-circle"></i>
+            <p class="user-name">Nombre</p>
+
+            <!-- 🔹 Menú desplegable -->
+            <div id="logoutContainer" class="logout-container hidden">
+              <a href="/HTML/registro.html" id="logout" class="logout-btn">
+                <i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+              </a>
+            </div>
+          </div>
       </div>
 
     </div>
@@ -212,6 +222,7 @@
   </div>
 </footer>
 
+  <script src="/JS/rolControl.js"></script>
 
 </body>
 </html>

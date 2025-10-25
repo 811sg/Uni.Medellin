@@ -10,8 +10,11 @@ const recoverForm = document.getElementById('recoverForm');
 const forgotLink = document.querySelector('.forgot');
 const openInfo = document.getElementById('openInfo');
 
+// =====================
+// 🧭 ANIMACIONES
+// =====================
 
-// 🔹 Abre la información desde el ícono dentro del login
+// 🔹 Abre la información
 openInfo.addEventListener('click', () => {
   loginCard.classList.add('fade-out');
   setTimeout(() => {
@@ -21,7 +24,7 @@ openInfo.addEventListener('click', () => {
   }, 400);
 });
 
-// 🔹 Cierra información y vuelve al login
+// 🔹 Cierra la información
 closeInfo.addEventListener('click', () => {
   infoCard.classList.add('fade-out');
   setTimeout(() => {
@@ -30,7 +33,6 @@ closeInfo.addEventListener('click', () => {
     loginCard.classList.add('fade-in');
   }, 400);
 });
-
 
 // 🔹 Abre registro desde login
 openRegister.addEventListener('click', () => {
@@ -42,27 +44,94 @@ openRegister.addEventListener('click', () => {
   }, 400);
 });
 
-// 🔹 Cuando se envía el formulario de registro, vuelve al login
-registerForm.addEventListener('submit', (e) => {
+// =====================
+// 🧾 REGISTRO
+// =====================
+registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  registerCard.classList.add('fade-out');
-  setTimeout(() => {
-    registerCard.classList.add('hidden');
-    loginCard.classList.remove('hidden', 'fade-out');
-    loginCard.classList.add('fade-in');
-  }, 400);
+
+  const nombre = document.getElementById("nombre").value.trim();
+  const correo = document.getElementById("correo").value.trim();
+  const contrasena = document.getElementById("contrasena").value.trim();
+
+  if (!correo.includes("@soydocente") && !correo.includes("@soyestudiante")) {
+    alert("❌ Usa tu correo institucional (@soydocente o @soyestudiante)");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:3001/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, correo, contrasena }),
+    });
+
+    const msg = await res.text();
+
+    if (res.ok) {
+      alert("✅ " + msg);
+      registerCard.classList.add('fade-out');
+      setTimeout(() => {
+        registerCard.classList.add('hidden');
+        loginCard.classList.remove('hidden', 'fade-out');
+        loginCard.classList.add('fade-in');
+      }, 400);
+    } else {
+      alert("⚠️ " + msg);
+    }
+  } catch (error) {
+    console.error(error);
+    alert("❌ Error al conectar con el servidor.");
+  }
 });
 
-// 🔹 Cuando se inicia sesión, redirige a principal.html
-loginForm.addEventListener('submit', (e) => {
+// =====================
+// 🔑 LOGIN REAL (guarda el rol y el nombre)
+// =====================
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  loginCard.classList.add('fade-out');
-  setTimeout(() => {
-    window.location.href = "/HTML/principal.html";
-  }, 400);
+
+  const correo = document.getElementById("usuario").value.trim();
+  const contrasena = document.getElementById("password").value.trim();
+
+  if (!correo || !contrasena) {
+    alert("⚠️ Ingresa tu correo y contraseña.");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:3001/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correo, contrasena }),
+    });
+
+    if (!res.ok) {
+      const msg = await res.text();
+      alert(msg); // Solo muestra errores
+      return;
+    }
+
+    const data = await res.json();
+
+    // 🧠 Guardar información en localStorage
+    localStorage.setItem("rol", data.rol);
+    localStorage.setItem("nombre", data.nombre);
+
+    // 🔹 Redirigir directamente según rol
+    loginCard.classList.add("fade-out");
+    setTimeout(() => {
+      window.location.href = "/HTML/principal.html";
+    }, 400);
+  } catch (error) {
+    console.error(error);
+    alert("❌ Error al conectar con el servidor.");
+  }
 });
 
-// 🔹 Abre la tarjeta de recuperación desde login
+// =====================
+// 🔁 RECUPERAR CONTRASEÑA
+// =====================
 forgotLink.addEventListener('click', (e) => {
   e.preventDefault();
   loginCard.classList.add('fade-out');
@@ -73,7 +142,6 @@ forgotLink.addEventListener('click', (e) => {
   }, 400);
 });
 
-// 🔹 Al confirmar recuperación, vuelve al login
 recoverForm.addEventListener('submit', (e) => {
   e.preventDefault();
   recoverCard.classList.add('fade-out');

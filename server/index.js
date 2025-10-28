@@ -7,7 +7,18 @@ import pkg from "pg";
 import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import fetch from "node-fetch"; // 🔹 Para comunicación con Flask
 
+// ✅ Configurar __dirname (necesario en módulos ES)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// =====================
+// ⚙️ CONFIGURACIONES BASE
+// =====================
 dotenv.config();
 const { Pool } = pkg;
 
@@ -30,23 +41,49 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // =====================
-// 📤 SUBIR HOJA DE VIDA
+// 📤 SUBIR HOJA DE VIDA (GUARDAR EN BD + CARPETA IA)
 // =====================
 app.post("/upload-cv", upload.single("cv"), async (req, res) => {
   try {
+    console.log("📥 Petición recibida en /upload-cv"); // LOG
     const file = req.file;
     const nombre = req.body.nombre;
     const correo = req.body.correo;
 
+    console.log("➡️ Datos recibidos:", { nombre, correo, file: file?.originalname });
+
+    if (!file) {
+      console.log("⚠️ No se subió ningún archivo");
+      return res.status(400).send("❌ No se subió ningún archivo.");
+    }
+
+    // 💾 Guardar en la base de datos
     const query = `
       INSERT INTO hojas_de_vida (nombre, correo, archivo_nombre, archivo_datos)
       VALUES ($1, $2, $3, $4)
     `;
     await pool.query(query, [nombre, correo, file.originalname, file.buffer]);
 
-    res.status(200).send("✅ Hoja de vida cargada con éxito");
+    // 🧠 Guardar también el archivo físicamente en IA/hojas_de_vida/
+    // Usamos __dirname absoluto para asegurar que funcione desde /server
+    const outputDir = path.join(__dirname, "../IA/hojas_de_vida");
+
+    // Crear carpeta si no existe
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      console.log("📁 Carpeta creada correctamente en:", outputDir);
+    }
+
+    // Guardar archivo con nombre único
+    const safeFileName = `${Date.now()}_${file.originalname.replace(/\s+/g, "_")}`;
+    const filePath = path.join(outputDir, safeFileName);
+
+    fs.writeFileSync(filePath, file.buffer);
+    console.log(`✅ Hoja de vida guardada en: ${filePath}`);
+
+    res.status(200).send("✅ Hoja de vida cargada con éxito y guardada para análisis IA.");
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error al subir hoja de vida:", error);
     res.status(500).send("❌ Error al subir la hoja de vida");
   }
 });
@@ -67,7 +104,10 @@ app.get("/download-cv/:id", async (req, res) => {
     }
 
     const file = result.rows[0];
-    res.setHeader("Content-Disposition", `attachment; filename=${file.archivo_nombre}`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${file.archivo_nombre}`
+    );
     res.send(file.archivo_datos);
   } catch (error) {
     console.error(error);
@@ -82,26 +122,16 @@ app.post("/register", async (req, res) => {
   try {
     const { nombre, correo, contrasena } = req.body;
 
-    if (!nombre || !correo || !contrasena) {
-      return res.status(400).send("❌ Faltan datos obligatorios.");
-    }
-
     // Determinar rol según el correo
     let rol = "";
     if (correo.includes("@soydocente")) rol = "docente";
     else if (correo.includes("@soyestudiante")) rol = "estudiante";
     else return res.status(400).send("❌ Correo institucional no válido.");
 
-    // Verificar si ya existe el usuario
-    const check = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [correo]);
-    if (check.rows.length > 0) {
-      return res.status(409).send("⚠️ Este correo ya está registrado.");
-    }
-
     // Encriptar contraseña
     const hashed = await bcrypt.hash(contrasena, 10);
 
-    // Guardar usuario en base de datos
+    // Guardar en la base de datos
     await pool.query(
       "INSERT INTO usuarios (nombre, correo, contrasena, rol) VALUES ($1, $2, $3, $4)",
       [nombre, correo, hashed, rol]
@@ -109,8 +139,12 @@ app.post("/register", async (req, res) => {
 
     res.status(200).send("✅ Usuario registrado correctamente.");
   } catch (error) {
-    console.error("❌ Error al registrar usuario:", error);
-    res.status(500).send("❌ Error al registrar el usuario.");
+    console.error(error);
+    if (error.code === "23505") {
+      res.status(400).send("⚠️ Este correo ya está registrado.");
+    } else {
+      res.status(500).send("❌ Error al registrar el usuario.");
+    }
   }
 });
 
@@ -121,28 +155,78 @@ app.post("/login", async (req, res) => {
   try {
     const { correo, contrasena } = req.body;
 
-    const result = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [correo]);
-    if (result.rows.length === 0) {
+    const result = await pool.query("SELECT * FROM usuarios WHERE correo = $1", [
+      correo,
+    ]);
+
+    if (result.rows.length === 0)
       return res.status(400).send("❌ Usuario no encontrado.");
-    }
 
     const user = result.rows[0];
     const match = await bcrypt.compare(contrasena, user.contrasena);
 
-    if (!match) {
-      return res.status(400).send("❌ Contraseña incorrecta.");
-    }
+    if (!match) return res.status(400).send("❌ Contraseña incorrecta.");
 
-    // Enviar solo los datos necesarios
     res.json({
       rol: user.rol,
       nombre: user.nombre,
     });
   } catch (error) {
-    console.error("❌ Error al iniciar sesión:", error);
+    console.error(error);
     res.status(500).send("❌ Error al iniciar sesión.");
   }
 });
+
+// =====================
+// 📂 OBTENER TODAS LAS HOJAS DE VIDA (para el panel del profesor)
+// =====================
+app.get("/hojas-de-vida", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, nombre, correo, archivo_nombre FROM hojas_de_vida"
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("❌ Error al obtener las hojas de vida");
+  }
+});
+
+// =====================
+// 🤖 ENVIAR DATOS A LA IA (Flask)
+// =====================
+app.post("/analizar-cvs", async (req, res) => {
+  try {
+    // Si no se envía un perfil desde el frontend, usamos el perfil por defecto
+    const perfilPorDefecto = `
+    Buscamos estudiante para monitoría de Análisis de Datos con:
+    - Dominio de Python (Pandas, NumPy, Matplotlib)
+    - Conocimientos en estadística y análisis de datos
+    - Experiencia previa en enseñanza, tutorías o monitorías
+    - Excelente comunicación y paciencia
+    - Promedio superior a 4.0
+    - Capacidad para explicar conceptos complejos claramente
+    `;
+
+    // Si el frontend envía algo, se usa eso, de lo contrario el texto anterior
+    const perfil = req.body.perfil || perfilPorDefecto;
+
+    console.log("🤖 Perfil enviado a IA:", perfil.substring(0, 80) + "...");
+
+    const response = await fetch("http://127.0.0.1:5000/analizar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ perfil }),
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("❌ Error al conectar con la IA:", error);
+    res.status(500).send("❌ Error al conectar con la IA.");
+  }
+});
+
 
 // =====================
 // 🚀 INICIAR SERVIDOR

@@ -4,6 +4,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const tablaBody = document.querySelector("#tabla-candidatos tbody");
   const btnIA = document.getElementById("btn-ia");
   const totalCandidatos = document.getElementById("total-candidatos");
+  
+  let candidatosData = []; // Guardar datos completos de candidatos
+  let yaHayAsignado = false; // Control para saber si ya hay alguien asignado
 
   // 🔥 BLOQUEAR CUALQUIER RECARGA DE PÁGINA
   window.addEventListener("beforeunload", (e) => {
@@ -22,12 +25,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // =============================
-  // 📥 Cargar hojas de vida sin IA (solo base de datos)
+  // 📥 Cargar hojas de vida desde BD
   // =============================
   async function cargarCandidatos() {
     try {
       const res = await fetch("http://localhost:3001/hojas-de-vida");
       const data = await res.json();
+      
+      candidatosData = data; // Guardar datos completos
+
+      // Verificar si ya hay alguien asignado
+      yaHayAsignado = data.some(cv => cv.estado === 'Asignado');
+      console.log(`📊 Ya hay asignado: ${yaHayAsignado}`);
 
       tablaBody.innerHTML = "";
 
@@ -38,26 +47,176 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         data.forEach((cv) => {
           const nombreLimpio = cv.nombre.trim().replace(/\s+/g, ' ');
+          const estado = cv.estado || 'Pendiente';
+          const puntaje = cv.puntaje_ia ? `${cv.puntaje_ia.toFixed(1)}%` : 'N/A';
+          
+          // Determinar color del badge según estado
+          let badgeClass = 'bg-light text-dark border';
+          if (estado === 'Evaluado') badgeClass = 'bg-info text-white';
+          if (estado === 'Asignado') badgeClass = 'bg-success text-white';
+          
+          // Si ya hay alguien asignado y este NO es el asignado, deshabilitar botón Asignar
+          const deshabilitarAsignar = yaHayAsignado && estado !== 'Asignado';
           
           tablaBody.innerHTML += `
-            <tr data-nombre="${nombreLimpio.toLowerCase()}" data-correo="${cv.correo}">
+            <tr data-id="${cv.id}" data-nombre="${nombreLimpio.toLowerCase()}" data-correo="${cv.correo}">
               <td><strong>${nombreLimpio}</strong></td>
               <td>${cv.correo}</td>
-              <td class="col-puntaje">N/A</td>
-              <td><span class="badge bg-light text-dark border">Pendiente</span></td>
+              <td class="col-puntaje">${puntaje}</td>
+              <td><span class="badge ${badgeClass}">${estado}</span></td>
               <td class="text-center">
-                <button class="btn btn-sm btn-evaluar me-1">Evaluar</button>
-                <button class="btn btn-sm btn-outline-secondary me-1">Asignar</button>
-                <button class="btn btn-sm btn-outline-dark">Seguimiento</button>
+                <button class="btn btn-sm btn-evaluar me-1" data-id="${cv.id}" data-nombre="${nombreLimpio}">
+                  Evaluar
+                </button>
+                <button class="btn btn-sm btn-outline-secondary me-1 btn-asignar" 
+                        data-id="${cv.id}" 
+                        data-nombre="${nombreLimpio}"
+                        ${deshabilitarAsignar ? 'disabled' : ''}
+                        ${estado === 'Asignado' ? 'disabled' : ''}>
+                  ${estado === 'Asignado' ? 'Asignado ✓' : 'Asignar'}
+                </button>
+                <button class="btn btn-sm btn-outline-dark btn-seguimiento" data-id="${cv.id}" data-nombre="${nombreLimpio}">
+                  Seguimiento
+                </button>
               </td>
             </tr>`;
         });
+        
+        // Agregar event listeners a los botones
+        agregarEventListeners();
       }
 
       totalCandidatos.textContent = `Total candidatos: ${data.length}`;
     } catch (error) {
       console.error("❌ Error al cargar candidatos:", error);
     }
+  }
+
+  // =============================
+  // 🎯 EVENT LISTENERS PARA BOTONES
+  // =============================
+  function agregarEventListeners() {
+    // 🔍 BOTÓN EVALUAR
+    document.querySelectorAll('.btn-evaluar').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const candidatoId = btn.getAttribute('data-id');
+        const candidatoNombre = btn.getAttribute('data-nombre');
+        
+        console.log(`🔍 Evaluando candidato ID: ${candidatoId}`);
+        
+        // Buscar el candidato en los datos guardados
+        const candidato = candidatosData.find(c => c.id == candidatoId);
+        
+        if (!candidato) {
+          alert('❌ No se encontró información del candidato');
+          return;
+        }
+        
+        // 📄 Abrir PDF en nueva pestaña
+        const urlPDF = `http://localhost:3001/download-cv/${candidatoId}`;
+        window.open(urlPDF, '_blank');
+        
+        // 💾 Actualizar estado a "Evaluado" en BD
+        try {
+          const res = await fetch(`http://localhost:3001/evaluar-candidato/${candidatoId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          if (res.ok) {
+            console.log(`✅ Candidato ${candidatoNombre} marcado como Evaluado`);
+            
+            // Actualizar visualmente el estado en la tabla
+            const fila = btn.closest('tr');
+            const celdaEstado = fila.querySelector('td:nth-child(4)');
+            if (celdaEstado) {
+              celdaEstado.innerHTML = `<span class="badge bg-info text-white">Evaluado</span>`;
+            }
+          } else {
+            alert('❌ Error al actualizar el estado');
+          }
+        } catch (error) {
+          console.error('❌ Error al evaluar:', error);
+          alert('❌ Error al conectar con el servidor');
+        }
+      });
+    });
+    
+    // ⭐ BOTÓN ASIGNAR
+    document.querySelectorAll('.btn-asignar').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const candidatoId = btn.getAttribute('data-id');
+        const candidatoNombre = btn.getAttribute('data-nombre');
+        
+        // Confirmar asignación
+        const confirmar = confirm(
+          `¿Estás seguro de asignar a ${candidatoNombre} como monitor?\n\n` +
+          `⚠️ Solo puedes asignar UN monitor. Esta acción bloqueará a los demás candidatos.`
+        );
+        
+        if (!confirmar) return;
+        
+        console.log(`⭐ Asignando candidato ID: ${candidatoId}`);
+        
+        // Obtener correo del profesor (guardado en sessionStorage o localStorage)
+        const profesorCorreo = localStorage.getItem('userEmail') || 'profesor@soydocente.com';
+        
+        try {
+          const res = await fetch(`http://localhost:3001/asignar-monitor/${candidatoId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profesorCorreo })
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok) {
+            console.log(`✅ Monitor asignado: ${candidatoNombre}`);
+            alert(`✅ ${candidatoNombre} ha sido asignado como monitor exitosamente.`);
+            
+            yaHayAsignado = true;
+            
+            // Actualizar toda la tabla
+            const filas = tablaBody.querySelectorAll('tr');
+            filas.forEach(fila => {
+              const filaId = fila.getAttribute('data-id');
+              const celdaEstado = fila.querySelector('td:nth-child(4)');
+              const btnAsignar = fila.querySelector('.btn-asignar');
+              
+              if (filaId == candidatoId) {
+                // Este es el asignado
+                if (celdaEstado) {
+                  celdaEstado.innerHTML = `<span class="badge bg-success text-white">Asignado</span>`;
+                }
+                if (btnAsignar) {
+                  btnAsignar.textContent = 'Asignado ✓';
+                  btnAsignar.disabled = true;
+                }
+              } else {
+                // Los demás se deshabilitan
+                if (btnAsignar) {
+                  btnAsignar.disabled = true;
+                  btnAsignar.classList.add('text-muted');
+                }
+              }
+            });
+            
+          } else {
+            alert(`❌ ${data.error || 'Error al asignar monitor'}`);
+          }
+          
+        } catch (error) {
+          console.error('❌ Error al asignar:', error);
+          alert('❌ Error al conectar con el servidor');
+        }
+      });
+    });
   }
 
   // =============================
@@ -150,44 +309,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         colPuntaje.innerHTML = `<small class="text-muted">Sin resultado</small>`;
       }
       
-      const colEstado = fila.querySelector("td:nth-child(4)");
-      if (colEstado) {
-        colEstado.innerHTML = `<span class="badge bg-light text-dark border">Pendiente</span>`;
-      }
-      
-      const colAcciones = fila.querySelector("td:nth-child(5)");
-      if (colAcciones) {
-        const tieneBotonEvaluar = colAcciones.querySelector(".btn-evaluar");
-        
-        if (!tieneBotonEvaluar) {
-          colAcciones.innerHTML = `
-            <button class="btn btn-sm btn-evaluar me-1">Evaluar</button>
-            <button class="btn btn-sm btn-outline-secondary me-1">Asignar</button>
-            <button class="btn btn-sm btn-outline-dark">Seguimiento</button>
-          `;
-        }
-      }
-      
       tablaBody.appendChild(fila);
     });
+    
+    // Re-agregar event listeners después de reordenar
+    agregarEventListeners();
     
     console.log("✅ Tabla reordenada correctamente");
   }
 
   // =============================
-  // 🤖 Analizar CVs con IA al dar click
+  // 🤖 Analizar CVs con IA
   // =============================
   if (btnIA) {
-    // 🔥 ASEGURAR QUE EL BOTÓN NUNCA CAUSE SUBMIT
     btnIA.setAttribute("type", "button");
     
-    // 🔥 ELIMINAR CUALQUIER EVENTO PREVIO
     const nuevoBoton = btnIA.cloneNode(true);
     btnIA.parentNode.replaceChild(nuevoBoton, btnIA);
     const btnIALimpio = document.getElementById("btn-ia");
     
     btnIALimpio.addEventListener("click", async (e) => {
-      // 🔥 BLOQUEAR TODO TIPO DE PROPAGACIÓN
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -232,6 +373,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("🤖 Análisis de IA completado");
         console.log("📊 Resultados recibidos:", resultados);
 
+        // 💾 Guardar puntajes en BD
+        await fetch("http://localhost:3001/guardar-puntajes-ia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resultados })
+        });
+
         // ✅ REORDENAR tabla según puntajes de la IA
         reordenarYActualizarTabla(resultados);
         
@@ -239,7 +387,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         console.log("✅ ANÁLISIS COMPLETADO - TABLA ACTUALIZADA");
         
-        // 🔥 FORZAR QUE LA PÁGINA NO SE RECARGUE
         return false;
         
       } catch (error) {
@@ -264,9 +411,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // =============================
-  // 🚀 Al cargar la página: SOLO mostrar datos originales
+  // 🚀 INICIAR CARGA
   // =============================
-  console.log("📄 Cargando candidatos en orden original (sin IA)...");
+  console.log("📄 Cargando candidatos...");
   await cargarCandidatos();
-  console.log("✅ Tabla cargada en orden original - lista para análisis");
+  console.log("✅ Sistema listo");
 });

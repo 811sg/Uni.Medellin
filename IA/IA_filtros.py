@@ -52,42 +52,23 @@ def extraer_texto_pdf(ruta):
 
 def extraer_nombre(texto, archivo):
     """
-    Extrae SOLO nombre + primer apellido del candidato.
-    Ejemplo: "Camilo Herrera Gómez" → "Camilo Herrera"
+    Extrae el nombre completo del candidato (igual que el original).
     """
-    # Buscar patrón "Nombre Completo: Camilo Herrera Gómez"
     match = re.search(
         r'nombre\s*(?:completo)?:\s*([a-záéíóúñ\s]+?)(?:\n|código|correo|teléfono|email)',
         texto.lower()
     )
     
     if match:
-        nombre_completo = match.group(1).strip().title()
-        nombre_completo = re.sub(r'\s+', ' ', nombre_completo)
-        
-        # 🔥 IMPORTANTE: Tomar SOLO las primeras 2 palabras (nombre + apellido)
-        partes = nombre_completo.split()
-        if len(partes) >= 2:
-            nombre_corto = f"{partes[0]} {partes[1]}"
-            print(f"   📝 Nombre extraído del PDF: '{nombre_completo}' → '{nombre_corto}'")
-            return nombre_corto
-        
-        return nombre_completo
+        nombre = match.group(1).strip().title()
+        nombre = re.sub(r'\s+', ' ', nombre)
+        return nombre
     
     # Si no encuentra el nombre en el texto, usar el nombre del archivo
-    # Eliminar timestamp y extensión
     nombre = os.path.splitext(os.path.basename(archivo))[0]
-    nombre = re.sub(r'^\d+_', '', nombre)  # Quitar timestamp inicial
+    nombre = re.sub(r'^\d+_', '', nombre)  # Quitar timestamp
     nombre = re.sub(r'^(cv|hoja|vida)_?', '', nombre, flags=re.I)
     nombre = nombre.replace('_', ' ').title()
-    
-    # También acortar el nombre del archivo
-    partes = nombre.split()
-    if len(partes) >= 2:
-        nombre_corto = f"{partes[0]} {partes[1]}"
-        print(f"   📝 Nombre del archivo: '{nombre}' → '{nombre_corto}'")
-        return nombre_corto
-    
     return nombre
 
 
@@ -100,7 +81,7 @@ def limpiar_texto(texto):
 
 
 def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
-    """Analiza los CVs de la carpeta según el perfil recibido."""
+    """Analiza los CVs según el perfil (CONFIGURACIÓN ORIGINAL)."""
     print("=" * 85)
     print(" SISTEMA DE SELECCIÓN INTELIGENTE DE MONITORES ".center(85))
     print("=" * 85)
@@ -134,7 +115,7 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
                 'Archivo': pdf,
                 'Texto': texto_limpio
             })
-            print(f"[OK] - {len(texto_limpio.split())} palabras procesadas")
+            print("[OK]")
         else:
             print("[ERROR]")
 
@@ -147,31 +128,20 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
     df = pd.DataFrame(candidatos)
 
     # =======================================
-    # 🧠 ANÁLISIS DE SIMILITUD (IA MEJORADA)
+    # 🧠 ANÁLISIS - CONFIGURACIÓN ORIGINAL
     # =======================================
     print("[*] Analizando con IA (TF-IDF + Similitud de Coseno)...")
 
     perfil_limpio = limpiar_texto(perfil)
-    print(f"[*] Palabras clave del perfil: {len(perfil_limpio.split())}")
-    
     textos = df['Texto'].tolist() + [perfil_limpio]
 
-    # 🔥 CONFIGURACIÓN MEJORADA DEL VECTORIZADOR
-    vectorizer = TfidfVectorizer(
-        max_features=1000,        # Más features para mejor precisión
-        ngram_range=(1, 3),       # Considera frases de 1-3 palabras
-        min_df=1,                 # Incluir términos aunque aparezcan 1 vez
-        sublinear_tf=True,        # Escalado logarítmico
-        strip_accents='unicode'   # Normalizar acentos
-    )
-    
+    # 🔥 CONFIGURACIÓN EXACTA DEL ORIGINAL
+    vectorizer = TfidfVectorizer(max_features=100, ngram_range=(1, 2))
     matriz_tfidf = vectorizer.fit_transform(textos)
 
-    # 🔹 Calcular similitud entre perfil y CVs
     similitudes = cosine_similarity(matriz_tfidf[-1], matriz_tfidf[:-1]).flatten()
     df['Score'] = similitudes
 
-    # 🔹 Ordenar candidatos de mayor a menor similitud
     df = df.sort_values('Score', ascending=False).reset_index(drop=True)
 
     print(f"[OK] Análisis completado\n")
@@ -184,17 +154,22 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
         prefijo = ["[1]", "[2]", "[3]"][i] if i < 3 else f"[{i+1}]"
         barra = "█" * int(row['Score'] * 50)
         print(f"{prefijo} {row['Nombre']}")
-        print(f"      Score: {row['Score']:.4f} ({row['Score']*100:.1f}%) [{barra}]")
+        print(f"      Score: {row['Score']:.4f} ({int(row['Score']*100)}%) [{barra}]")
         print(f"      Archivo: {row['Archivo']}\n")
 
-    print("[*] Resultados guardados en: ranking_monitores.csv\n")
+    print("=" * 85)
+    print(f" RECOMENDADO: {df.iloc[0]['Nombre']} (Score: {df.iloc[0]['Score']:.4f}) ".center(85))
+    print("=" * 85)
+    print()
+
     df[['Nombre', 'Archivo', 'Score']].to_csv('ranking_monitores.csv', index=False)
+    print("[*] Resultados guardados en: ranking_monitores.csv\n")
 
     return df
 
 
 # =======================================
-# 🌐 SERVIDOR FLASK (Integración con Node.js)
+# 🌐 SERVIDOR FLASK
 # =======================================
 app = Flask(__name__)
 CORS(app)
@@ -216,19 +191,19 @@ def analizar():
             print("[⚠️] No se encontraron CVs válidos.")
             return jsonify({"error": "No se encontraron CVs válidos."}), 400
 
-        # 🔥 Devolver scores sin multiplicar (como decimales)
+        # 🔥 DEVOLVER SCORES YA MULTIPLICADOS POR 100 (COMO PORCENTAJE)
         resultados = [
             {
                 "nombre": row["Nombre"],
                 "archivo": row["Archivo"],
-                "puntaje": round(float(row["Score"]), 4)
+                "puntaje": round(float(row["Score"]) * 100, 2)  # ✅ Multiplicar por 100
             }
             for _, row in df.iterrows()
         ]
 
         print(f"[✅] Resultados generados ({len(resultados)} candidatos):")
         for r in resultados:
-            print(f"   • {r['nombre']}: {r['puntaje']*100:.2f}%")
+            print(f"   • {r['nombre']}: {r['puntaje']:.2f}%")
         print()
         
         return jsonify(resultados)

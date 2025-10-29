@@ -225,16 +225,10 @@ app.post("/analizar-cvs", async (req, res) => {
     console.log("✅ Respuesta de Flask recibida:");
     console.log(data);
     
-    // 🔥 IMPORTANTE: Convertir puntajes a porcentaje si vienen como decimal
-    const resultadosFormateados = data.map(item => ({
-      nombre: item.nombre,
-      archivo: item.archivo,
-      puntaje: item.puntaje > 1 ? item.puntaje : item.puntaje * 100
-    }));
+    // 🔥 SIMPLEMENTE DEVOLVER LOS DATOS SIN MODIFICAR
+    // Python ya envía los puntajes como porcentaje (51.02, 50.37, etc.)
+    res.json(data);
     
-    console.log("📊 Resultados formateados:", resultadosFormateados);
-    
-    res.json(resultadosFormateados);
   } catch (error) {
     console.error("❌ Error al conectar con la IA:", error);
     res.status(500).send("❌ Error al conectar con la IA.");

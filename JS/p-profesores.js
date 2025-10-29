@@ -1,7 +1,25 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("🚀 p-profesores.js iniciando...");
+  
   const tablaBody = document.querySelector("#tabla-candidatos tbody");
   const btnIA = document.getElementById("btn-ia");
   const totalCandidatos = document.getElementById("total-candidatos");
+
+  // 🔥 BLOQUEAR CUALQUIER RECARGA DE PÁGINA
+  window.addEventListener("beforeunload", (e) => {
+    e.preventDefault();
+    return false;
+  });
+
+  // 🔥 PREVENIR SUBMIT DE FORMULARIOS
+  document.querySelectorAll("form").forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      console.log("⛔ Submit bloqueado");
+      return false;
+    });
+  });
 
   // =============================
   // 📥 Cargar hojas de vida sin IA (solo base de datos)
@@ -19,7 +37,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         `;
       } else {
         data.forEach((cv) => {
-          // 🔧 Limpiar nombre de espacios extra
           const nombreLimpio = cv.nombre.trim().replace(/\s+/g, ' ');
           
           tablaBody.innerHTML += `
@@ -50,11 +67,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("🎯 Reordenando tabla según análisis de IA...");
     console.log("📊 Resultados recibidos:", resultados);
     
-    // Obtener todas las filas actuales
     const filasArray = Array.from(tablaBody.querySelectorAll("tr"));
     console.log(`📋 Total filas en tabla: ${filasArray.length}`);
     
-    // 🔧 FUNCIÓN PARA NORMALIZAR NOMBRES (quita acentos, espacios extra, minúsculas)
     function normalizarNombre(nombre) {
       return nombre
         .toLowerCase()
@@ -64,16 +79,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         .replace(/[\u0300-\u036f]/g, "");
     }
     
-    // Crear un mapa de resultados por nombre (normalizado)
     const mapaResultados = new Map();
     resultados.forEach(resultado => {
       const nombreNormalizado = normalizarNombre(resultado.nombre);
-      
-      // 🔥 Manejar puntajes que pueden venir como decimal (0.5102) o porcentaje (51.02)
-      let puntajePorcentaje = resultado.puntaje;
-      if (puntajePorcentaje <= 1) {
-        puntajePorcentaje = puntajePorcentaje * 100;
-      }
+      const puntajePorcentaje = resultado.puntaje;
       
       mapaResultados.set(nombreNormalizado, {
         nombre: resultado.nombre,
@@ -82,19 +91,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log(`🔍 IA encontró: "${resultado.nombre}" → ${puntajePorcentaje.toFixed(2)}%`);
     });
     
-    // Asignar puntajes a cada fila
     filasArray.forEach(fila => {
       const nombreFila = fila.getAttribute("data-nombre");
       const nombreFilaNormalizado = normalizarNombre(nombreFila);
       
       let resultadoMatch = null;
       
-      // Buscar coincidencia exacta
       if (mapaResultados.has(nombreFilaNormalizado)) {
         resultadoMatch = mapaResultados.get(nombreFilaNormalizado);
         console.log(`✅ Match exacto: "${nombreFila}" ↔ "${resultadoMatch.nombre}" (${resultadoMatch.puntaje}%)`);
       } else {
-        // Buscar coincidencia parcial
         for (const [nombreIA, data] of mapaResultados) {
           if (nombreFilaNormalizado.includes(nombreIA) || nombreIA.includes(nombreFilaNormalizado)) {
             resultadoMatch = data;
@@ -104,11 +110,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         
         if (!resultadoMatch) {
-          console.log(`⚠️ No match para: "${nombreFila}" (normalizado: "${nombreFilaNormalizado}")`);
+          console.log(`⚠️ No match para: "${nombreFila}"`);
         }
       }
       
-      // Guardar el puntaje en un atributo data para ordenar después
       if (resultadoMatch) {
         fila.setAttribute("data-puntaje", resultadoMatch.puntaje);
       } else {
@@ -116,7 +121,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
     
-    // 🔥 ORDENAR filas de MAYOR a MENOR puntaje
     filasArray.sort((a, b) => {
       const puntajeA = parseFloat(a.getAttribute("data-puntaje"));
       const puntajeB = parseFloat(b.getAttribute("data-puntaje"));
@@ -130,13 +134,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log(`  ${idx + 1}. ${nombre} - ${puntaje}%`);
     });
     
-    // Limpiar tabla y reinsertar filas ordenadas
     tablaBody.innerHTML = "";
     filasArray.forEach(fila => {
       const puntaje = parseFloat(fila.getAttribute("data-puntaje"));
       const colPuntaje = fila.querySelector(".col-puntaje");
       
-      // Actualizar visualización del puntaje
       if (puntaje >= 0 && colPuntaje) {
         colPuntaje.innerHTML = `
           <div class="progress" style="height: 8px;">
@@ -148,13 +150,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         colPuntaje.innerHTML = `<small class="text-muted">Sin resultado</small>`;
       }
       
-      // 🔒 GARANTIZAR que el estado siempre sea "Pendiente"
       const colEstado = fila.querySelector("td:nth-child(4)");
       if (colEstado) {
         colEstado.innerHTML = `<span class="badge bg-light text-dark border">Pendiente</span>`;
       }
       
-      // 🔒 GARANTIZAR que los botones estén correctos
       const colAcciones = fila.querySelector("td:nth-child(5)");
       if (colAcciones) {
         const tieneBotonEvaluar = colAcciones.querySelector(".btn-evaluar");
@@ -168,7 +168,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
       
-      // Reinsertar fila en la tabla
       tablaBody.appendChild(fila);
     });
     
@@ -176,23 +175,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // =============================
-  // 🤖 Analizar CVs con IA al dar click (SOLO UNA VEZ)
+  // 🤖 Analizar CVs con IA al dar click
   // =============================
-  let analisisRealizado = false;  // 🔒 Variable para controlar análisis único
-  
   if (btnIA) {
-    btnIA.addEventListener("click", async () => {
-      // 🔒 Si ya se analizó, no permitir otro análisis
-      if (analisisRealizado) {
-        alert("⚠️ El análisis ya fue realizado. Recarga la página para analizar nuevamente.");
-        return;
-      }
+    // 🔥 ASEGURAR QUE EL BOTÓN NUNCA CAUSE SUBMIT
+    btnIA.setAttribute("type", "button");
+    
+    // 🔥 ELIMINAR CUALQUIER EVENTO PREVIO
+    const nuevoBoton = btnIA.cloneNode(true);
+    btnIA.parentNode.replaceChild(nuevoBoton, btnIA);
+    const btnIALimpio = document.getElementById("btn-ia");
+    
+    btnIALimpio.addEventListener("click", async (e) => {
+      // 🔥 BLOQUEAR TODO TIPO DE PROPAGACIÓN
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       
-      btnIA.disabled = true;
-      const originalText = btnIA.innerHTML;
-      btnIA.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Analizando...`;
+      console.log("🧠 Botón IA presionado — INICIANDO ANÁLISIS");
+      
+      btnIALimpio.disabled = true;
+      const originalText = btnIALimpio.innerHTML;
+      btnIALimpio.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Analizando...`;
 
-      // Mostrar spinner en puntajes mientras analiza
       const filas = tablaBody.querySelectorAll("tr");
       filas.forEach((fila) => {
         const colPuntaje = fila.querySelector(".col-puntaje");
@@ -202,6 +207,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       try {
+        console.log("📡 Enviando petición a la IA...");
+        
         const res = await fetch("http://localhost:3001/analizar-cvs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -216,7 +223,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           }),
         });
 
-        if (!res.ok) throw new Error("Error al conectar con la IA.");
+        if (!res.ok) {
+          throw new Error(`Error HTTP: ${res.status}`);
+        }
+        
         const resultados = await res.json();
 
         console.log("🤖 Análisis de IA completado");
@@ -227,11 +237,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         totalCandidatos.textContent = `Total analizados: ${resultados.length}`;
         
+        console.log("✅ ANÁLISIS COMPLETADO - TABLA ACTUALIZADA");
+        
+        // 🔥 FORZAR QUE LA PÁGINA NO SE RECARGUE
+        return false;
+        
       } catch (error) {
         console.error("❌ Error al analizar:", error);
         alert("❌ Error al analizar las hojas de vida con la IA.");
         
-        // Restaurar "N/A" en caso de error
         const filas = tablaBody.querySelectorAll("tr");
         filas.forEach((fila) => {
           const colPuntaje = fila.querySelector(".col-puntaje");
@@ -239,16 +253,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         
       } finally {
-        btnIA.disabled = false;
-        btnIA.innerHTML = originalText;
+        btnIALimpio.disabled = false;
+        btnIALimpio.innerHTML = originalText;
+        
+        console.log("🔄 Botón IA restaurado");
       }
     });
+    
+    console.log("✅ Botón IA configurado correctamente");
   }
 
   // =============================
   // 🚀 Al cargar la página: SOLO mostrar datos originales
   // =============================
-  console.log("🔄 Cargando candidatos en orden original (sin IA)...");
+  console.log("📄 Cargando candidatos en orden original (sin IA)...");
   await cargarCandidatos();
   console.log("✅ Tabla cargada en orden original - lista para análisis");
 });

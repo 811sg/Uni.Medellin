@@ -41,11 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const celdaPuntaje = fila.querySelector("td:nth-child(3)");
       
       if (resultadoIA && celdaPuntaje) {
-        // 🔥 Manejar puntajes que pueden venir como decimal (0.5102) o porcentaje (51.02)
-        let puntajePorcentaje = resultadoIA.puntaje;
-        if (puntajePorcentaje <= 1) {
-          puntajePorcentaje = puntajePorcentaje * 100; // 0.5102 → 51.02%
-        }
+        // 🔥 Python ya envía el puntaje como porcentaje (51.02, 50.37, etc.)
+        // NO multiplicar por nada
+        const puntajePorcentaje = resultadoIA.puntaje;
         
         celdaPuntaje.innerHTML = `
           <div class="progress" style="height: 8px;">

@@ -163,16 +163,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!confirmar) return;
         
         console.log(`⭐ Asignando candidato ID: ${candidatoId}`);
-        
-        // Obtener correo del profesor (guardado en sessionStorage o localStorage)
-        const profesorCorreo = localStorage.getItem('userEmail') || 'profesor@soydocente.com';
-        
-        try {
-          const res = await fetch(`http://localhost:3001/asignar-monitor/${candidatoId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profesorCorreo })
-          });
+       
+                  // Obtener nombre del profesor (si lo tienes guardado)
+          const profesorNombre = localStorage.getItem('userName') || 'Profesor';
+
+          try {
+            const res = await fetch(`http://localhost:3001/asignar-monitor/${candidatoId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                profesorCorreo,
+                profesorNombre,
+                materia: 'Análisis de Datos', // Puedes hacer esto dinámico después
+                horario: 'Lunes y Miércoles 2-4pm',
+                semestre: '2025-1'
+              })
+            });
           
           const data = await res.json();
           

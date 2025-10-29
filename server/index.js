@@ -34,6 +34,16 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+// ✅ TEST DE CONEXIÓN
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ Error al conectar con Neon:', err.stack);
+  } else {
+    console.log('✅ Conexión exitosa a Neon PostgreSQL');
+    release();
+  }
+});
+
 // =====================
 // 📁 CONFIGURACIÓN DE MULTER (para subir archivos en memoria)
 // =====================
@@ -73,7 +83,7 @@ app.post("/upload-cv", upload.single("cv"), async (req, res) => {
       console.log("📁 Carpeta creada correctamente en:", outputDir);
     }
 
-    // 🔥 GUARDAR CON NOMBRE ORIGINAL (SIN TIMESTAMP)
+    // 📥 GUARDAR CON NOMBRE ORIGINAL (SIN TIMESTAMP)
     const safeFileName = file.originalname.replace(/\s+/g, "_");
     const filePath = path.join(outputDir, safeFileName);
 
@@ -87,6 +97,7 @@ app.post("/upload-cv", upload.single("cv"), async (req, res) => {
     res.status(500).send("❌ Error al subir la hoja de vida");
   }
 });
+
 // =====================
 // 📥 DESCARGAR HOJA DE VIDA
 // =====================
@@ -177,21 +188,6 @@ app.post("/login", async (req, res) => {
 });
 
 // =====================
-// 📂 OBTENER TODAS LAS HOJAS DE VIDA (para el panel del profesor)
-// =====================
-app.get("/hojas-de-vida", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT id, nombre, correo, archivo_nombre FROM hojas_de_vida"
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("❌ Error al obtener las hojas de vida");
-  }
-});
-
-// =====================
 // 🤖 ENVIAR DATOS A LA IA (Flask)
 // =====================
 app.post("/analizar-cvs", async (req, res) => {
@@ -225,8 +221,6 @@ app.post("/analizar-cvs", async (req, res) => {
     console.log("✅ Respuesta de Flask recibida:");
     console.log(data);
     
-    // 🔥 SIMPLEMENTE DEVOLVER LOS DATOS SIN MODIFICAR
-    // Python ya envía los puntajes como porcentaje (51.02, 50.37, etc.)
     res.json(data);
     
   } catch (error) {
@@ -236,11 +230,40 @@ app.post("/analizar-cvs", async (req, res) => {
 });
 
 // =====================================================
-// 📝 AGREGAR ESTOS ENDPOINTS A TU index.js
+// 📋 OBTENER HOJAS DE VIDA CON ESTADO
 // =====================================================
+app.get("/hojas-de-vida", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        id, 
+        nombre, 
+        correo, 
+        archivo_nombre, 
+        estado, 
+        puntaje_ia,
+        puntaje_manual,
+        seguimiento,
+        asignado_por,
+        fecha_asignacion,
+        fecha_evaluacion
+      FROM hojas_de_vida
+      ORDER BY 
+        CASE 
+          WHEN puntaje_ia IS NOT NULL THEN puntaje_ia 
+          ELSE -1 
+        END DESC
+    `);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al obtener hojas de vida:", error);
+    res.status(500).send("❌ Error al obtener las hojas de vida");
+  }
+});
 
 // =====================================================
-// 🔍 EVALUAR CANDIDATO (cambiar estado a Evaluado)
+// 📝 EVALUAR CANDIDATO (cambiar estado a Evaluado)
 // =====================================================
 app.post("/evaluar-candidato/:id", async (req, res) => {
   try {
@@ -301,28 +324,55 @@ app.post("/agregar-seguimiento/:id", async (req, res) => {
 });
 
 // =====================================================
-// ⭐ ASIGNAR MONITOR (solo permite UNO)
+// ⭐ ASIGNAR MONITOR (CON TRANSACCIÓN)
 // =====================================================
 app.post("/asignar-monitor/:id", async (req, res) => {
+  let client;
+  
   try {
     const { id } = req.params;
-    const { profesorCorreo } = req.body;
+    const { profesorCorreo, profesorNombre, materia, horario, semestre } = req.body;
+    
+    console.log(`🔄 Iniciando asignación de monitor ID: ${id}`);
+    console.log(`📧 Datos recibidos:`, { profesorCorreo, profesorNombre, materia, horario, semestre });
+    
+    // Obtener cliente de la pool
+    client = await pool.connect();
+    await client.query('BEGIN');
     
     // 🔍 Verificar si ya hay alguien asignado
-    const verificar = await pool.query(
+    const verificar = await client.query(
       "SELECT COUNT(*) as total FROM hojas_de_vida WHERE estado = 'Asignado'"
     );
     
     const yaAsignado = parseInt(verificar.rows[0].total);
+    console.log(`📊 Monitores ya asignados: ${yaAsignado}`);
     
     if (yaAsignado > 0) {
+      await client.query('ROLLBACK');
+      console.log(`⚠️ Ya hay un monitor asignado`);
       return res.status(400).json({ 
         error: "Ya hay un monitor asignado. Solo puedes asignar uno por proceso." 
       });
     }
     
-    // ✅ Asignar el monitor
-    await pool.query(
+    // 📄 Obtener datos del candidato
+    const candidato = await client.query(
+      "SELECT nombre, correo FROM hojas_de_vida WHERE id = $1",
+      [id]
+    );
+    
+    if (candidato.rows.length === 0) {
+      await client.query('ROLLBACK');
+      console.log(`❌ Candidato ID ${id} no encontrado`);
+      return res.status(404).json({ error: "Candidato no encontrado" });
+    }
+    
+    const { nombre, correo } = candidato.rows[0];
+    console.log(`👤 Candidato encontrado: ${nombre} (${correo})`);
+    
+    // ✅ 1. Actualizar estado en hojas_de_vida
+    await client.query(
       `UPDATE hojas_de_vida 
        SET estado = 'Asignado', 
            asignado_por = $1, 
@@ -330,51 +380,52 @@ app.post("/asignar-monitor/:id", async (req, res) => {
        WHERE id = $2`,
       [profesorCorreo, id]
     );
+    console.log(`✅ Estado actualizado en hojas_de_vida`);
     
-    console.log(`✅ Monitor asignado: ID ${id} por ${profesorCorreo}`);
+    // ✅ 2. Crear registro en monitores_activos
+    const materiaFinal = materia || 'No especificada';
+    const horarioFinal = horario || 'Por definir';
+    const semestreFinal = semestre || 'Actual';
+    const profesorNombreFinal = profesorNombre || 'Profesor';
+    
+    await client.query(
+      `INSERT INTO monitores_activos 
+       (hoja_vida_id, nombre, correo, materia, horario, semestre, profesor_correo, profesor_nombre, estado)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'activo')`,
+      [id, nombre, correo, materiaFinal, horarioFinal, semestreFinal, profesorCorreo, profesorNombreFinal]
+    );
+    console.log(`✅ Registro creado en monitores_activos`);
+    
+    await client.query('COMMIT');
+    console.log(`✅✅ TRANSACCIÓN COMPLETADA EXITOSAMENTE`);
+    
+    console.log(`✅ Monitor asignado: ${nombre} (ID: ${id})`);
+    console.log(`   Profesor: ${profesorCorreo}`);
+    console.log(`   Materia: ${materiaFinal}`);
+    
     res.status(200).json({ 
       mensaje: "Monitor asignado correctamente",
-      candidatoId: id 
+      candidatoId: id,
+      nombre: nombre,
+      correo: correo
     });
     
   } catch (error) {
+    if (client) {
+      await client.query('ROLLBACK');
+      console.log(`🔄 ROLLBACK ejecutado`);
+    }
     console.error("❌ Error al asignar monitor:", error);
-    res.status(500).json({ error: "Error al asignar el monitor" });
-  }
-});
-
-// =====================================================
-// 📊 OBTENER HOJAS DE VIDA CON ESTADO (actualizado)
-// =====================================================
-// 🔥 REEMPLAZA tu endpoint actual /hojas-de-vida con este:
-
-app.get("/hojas-de-vida", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT 
-        id, 
-        nombre, 
-        correo, 
-        archivo_nombre, 
-        estado, 
-        puntaje_ia,
-        puntaje_manual,
-        seguimiento,
-        asignado_por,
-        fecha_asignacion,
-        fecha_evaluacion
-      FROM hojas_de_vida
-      ORDER BY 
-        CASE 
-          WHEN puntaje_ia IS NOT NULL THEN puntaje_ia 
-          ELSE -1 
-        END DESC
-    `);
-    
-    res.json(result.rows);
-  } catch (error) {
-    console.error("❌ Error al obtener hojas de vida:", error);
-    res.status(500).send("❌ Error al obtener las hojas de vida");
+    console.error("❌ Stack trace:", error.stack);
+    res.status(500).json({ 
+      error: "Error al asignar el monitor",
+      detalle: error.message 
+    });
+  } finally {
+    if (client) {
+      client.release();
+      console.log(`🔓 Cliente liberado`);
+    }
   }
 });
 
@@ -383,7 +434,7 @@ app.get("/hojas-de-vida", async (req, res) => {
 // =====================================================
 app.post("/guardar-puntajes-ia", async (req, res) => {
   try {
-    const { resultados } = req.body; // Array de {nombre, archivo, puntaje}
+    const { resultados } = req.body;
     
     for (const resultado of resultados) {
       await pool.query(
@@ -404,11 +455,21 @@ app.post("/guardar-puntajes-ia", async (req, res) => {
 });
 
 // =====================================================
-// 🔄 RESETEAR TODOS LOS ESTADOS (solo para testing)
+// 🔄 RESETEAR ESTADOS (LIMPIA TODO)
 // =====================================================
 app.post("/reset-estados", async (req, res) => {
+  let client;
+  
   try {
-    await pool.query(`
+    client = await pool.connect();
+    await client.query('BEGIN');
+    
+    // ✅ 1. Eliminar todos los monitores activos
+    await client.query(`DELETE FROM monitores_activos`);
+    console.log(`🗑️ Monitores activos eliminados`);
+    
+    // ✅ 2. Resetear hojas de vida
+    await client.query(`
       UPDATE hojas_de_vida 
       SET estado = 'Pendiente',
           fecha_evaluacion = NULL,
@@ -417,53 +478,129 @@ app.post("/reset-estados", async (req, res) => {
           puntaje_manual = NULL,
           seguimiento = NULL
     `);
+    console.log(`🔄 Hojas de vida reseteadas`);
     
-    console.log("🔄 Todos los estados reseteados a Pendiente");
+    await client.query('COMMIT');
+    
+    console.log("🔄 Todos los estados y monitores activos reseteados");
     res.status(200).json({ 
       mensaje: "Estados reseteados correctamente",
-      accion: "Todos los candidatos vuelven a estado Pendiente" 
+      accion: "Todos los candidatos vuelven a estado Pendiente y monitores activos eliminados" 
     });
     
   } catch (error) {
+    if (client) await client.query('ROLLBACK');
     console.error("❌ Error al resetear estados:", error);
     res.status(500).json({ error: "Error al resetear los estados" });
+  } finally {
+    if (client) client.release();
   }
 });
 
 // =====================================================
-// 🗑️ QUITAR ASIGNACIÓN (mantener evaluaciones)
+// 🗑️ QUITAR ASIGNACIÓN
 // =====================================================
 app.post("/quitar-asignacion", async (req, res) => {
+  let client;
+  
   try {
-    const result = await pool.query(`
-      UPDATE hojas_de_vida 
-      SET estado = CASE 
-                     WHEN fecha_evaluacion IS NOT NULL THEN 'Evaluado'
-                     ELSE 'Pendiente'
-                   END,
-          asignado_por = NULL,
-          fecha_asignacion = NULL
-      WHERE estado = 'Asignado'
-      RETURNING nombre
+    client = await pool.connect();
+    await client.query('BEGIN');
+    
+    // 🔍 Buscar el monitor asignado
+    const monitorAsignado = await client.query(`
+      SELECT hv.id, hv.nombre, hv.fecha_evaluacion
+      FROM hojas_de_vida hv
+      WHERE hv.estado = 'Asignado'
     `);
     
-    if (result.rows.length > 0) {
-      console.log(`🗑️ Asignación removida de: ${result.rows[0].nombre}`);
-      res.status(200).json({ 
-        mensaje: "Asignación removida correctamente",
-        candidato: result.rows[0].nombre
-      });
-    } else {
-      res.status(404).json({ mensaje: "No hay ningún candidato asignado" });
+    if (monitorAsignado.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ mensaje: "No hay ningún candidato asignado" });
     }
     
+    const { id, nombre, fecha_evaluacion } = monitorAsignado.rows[0];
+    
+    // ✅ 1. Eliminar de monitores_activos
+    await client.query(`
+      DELETE FROM monitores_activos 
+      WHERE hoja_vida_id = $1
+    `, [id]);
+    
+    // ✅ 2. Actualizar estado en hojas_de_vida
+    const nuevoEstado = fecha_evaluacion ? 'Evaluado' : 'Pendiente';
+    await client.query(`
+      UPDATE hojas_de_vida 
+      SET estado = $1,
+          asignado_por = NULL,
+          fecha_asignacion = NULL
+      WHERE id = $2
+    `, [nuevoEstado, id]);
+    
+    await client.query('COMMIT');
+    
+    console.log(`🗑️ Asignación removida de: ${nombre}`);
+    res.status(200).json({ 
+      mensaje: "Asignación removida correctamente",
+      candidato: nombre
+    });
+    
   } catch (error) {
+    if (client) await client.query('ROLLBACK');
     console.error("❌ Error al quitar asignación:", error);
     res.status(500).json({ error: "Error al quitar la asignación" });
+  } finally {
+    if (client) client.release();
+  }
+});
+
+// =====================================================
+// 📋 OBTENER MONITORES ACTIVOS
+// =====================================================
+app.get("/monitores-activos/:profesorCorreo", async (req, res) => {
+  try {
+    const { profesorCorreo } = req.params;
+    
+    console.log(`📋 Buscando monitores activos para: ${profesorCorreo}`);
+    
+    const result = await pool.query(`
+      SELECT 
+        ma.id,
+        ma.nombre,
+        ma.correo,
+        ma.materia,
+        ma.horario,
+        ma.semestre,
+        ma.fecha_inicio,
+        ma.estado,
+        hv.puntaje_ia,
+        hv.puntaje_manual,
+        hv.seguimiento
+      FROM monitores_activos ma
+      INNER JOIN hojas_de_vida hv ON ma.hoja_vida_id = hv.id
+      WHERE ma.profesor_correo = $1 
+        AND ma.estado = 'activo'
+      ORDER BY ma.fecha_inicio DESC
+    `, [profesorCorreo]);
+    
+    console.log(`📋 Monitores activos encontrados: ${result.rows.length}`);
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error("❌ Error al obtener monitores activos:", error);
+    res.status(500).json({ error: "Error al obtener monitores activos" });
   }
 });
 
 // =====================
 // 🚀 INICIAR SERVIDOR
 // =====================
-app.listen(3001, () => console.log("🚀 Servidor corriendo en puerto 3001"));
+app.listen(3001, () => {
+  console.log("=".repeat(60));
+  console.log("🚀 SERVIDOR EXPRESS INICIADO");
+  console.log("=".repeat(60));
+  console.log(`📡 Puerto: 3001`);
+  console.log(`🌐 URL: http://localhost:3001`);
+  console.log(`💾 Base de datos: Neon PostgreSQL`);
+  console.log("=".repeat(60));
+});

@@ -41,8 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const celdaPuntaje = fila.querySelector("td:nth-child(3)");
       
       if (resultadoIA && celdaPuntaje) {
-        // 🔥 Python ya envía el puntaje como porcentaje (51.02, 50.37, etc.)
-        // NO multiplicar por nada
         const puntajePorcentaje = resultadoIA.puntaje;
         
         celdaPuntaje.innerHTML = `
@@ -64,7 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
           celdaAcciones.innerHTML = `
             <button class="btn btn-sm btn-evaluar me-1">Evaluar</button>
             <button class="btn btn-sm btn-outline-secondary me-1">Asignar</button>
-            <button class="btn btn-sm btn-outline-dark btn-seguimiento">Seguimiento</button>          `;
+            <button class="btn btn-sm btn-outline-dark btn-seguimiento">Seguimiento</button>
+          `;
         }
       }
 
@@ -129,39 +128,100 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-// ============================
-// 🪟 MODAL DE SEGUIMIENTO (solo vista)
-// ============================
-document.body.addEventListener("click", (e) => {
-  if (e.target.classList.contains("btn-seguimiento")) {
-    const fila = e.target.closest("tr");
-    const nombre = fila?.querySelector("strong")?.textContent.trim() || "Candidato";
+  // ============================
+  // 🪟 MODAL DE SEGUIMIENTO (FUNCIONAL)
+  // ============================
+  let candidatoActualId = null;
+  let candidatoActualNombre = null;
 
-    const titulo = document.getElementById("modalSeguimientoLabel");
-    if (titulo) titulo.textContent = `Evaluación de Candidato: ${nombre}`;
+  // Abrir modal al hacer clic en "Seguimiento"
+  document.body.addEventListener("click", (e) => {
+    if (e.target.classList.contains("btn-seguimiento")) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const fila = e.target.closest("tr");
+      candidatoActualId = fila?.getAttribute("data-id");
+      candidatoActualNombre = fila?.querySelector("strong")?.textContent.trim() || "Candidato";
 
-    const modalEl = document.getElementById("modalSeguimiento");
-    if (modalEl) {
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
+      console.log(`📝 Abriendo seguimiento para: ${candidatoActualNombre} (ID: ${candidatoActualId})`);
+
+      // Actualizar título del modal
+      const titulo = document.getElementById("modalSeguimientoLabel");
+      if (titulo) titulo.textContent = `Evaluación de Candidato: ${candidatoActualNombre}`;
+
+      // Limpiar campos del modal
+      document.getElementById("puntaje").value = "";
+      document.getElementById("comentarios").value = "";
+
+      // Abrir el modal
+      const modalEl = document.getElementById("modalSeguimiento");
+      if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      }
     }
-  }
+  });
 
-  // 🔹 Cerrar el modal al hacer clic en Guardar
-  if (e.target.id === "guardarEvaluacion") {
-    const modalEl = document.getElementById("modalSeguimiento");
-    const modal = bootstrap.Modal.getInstance(modalEl); // Obtener la instancia activa
-    if (modal) {
-      alert("Evaluación guardada correctamente ✅");
-      modal.hide(); // 🔸 Cierra solo este modal
+  // Guardar evaluación al hacer clic en "Guardar"
+  document.getElementById("guardarEvaluacion")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const puntaje = document.getElementById("puntaje").value;
+    const comentario = document.getElementById("comentarios").value;
+
+    // Validaciones
+    if (!puntaje || puntaje < 1 || puntaje > 100) {
+      alert("⚠️ Por favor ingresa un puntaje válido entre 1 y 100");
+      return;
     }
-  }
-});
 
+    if (!comentario || comentario.trim() === "") {
+      alert("⚠️ Por favor ingresa un comentario");
+      return;
+    }
+
+    if (!candidatoActualId) {
+      alert("❌ Error: No se identificó el candidato");
+      return;
+    }
+
+    console.log(`💾 Guardando evaluación para ID: ${candidatoActualId}`);
+    console.log(`   Puntaje: ${puntaje}`);
+    console.log(`   Comentario: ${comentario}`);
+
+    try {
+      const res = await fetch(`http://localhost:3001/agregar-seguimiento/${candidatoActualId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ puntaje: parseInt(puntaje), comentario })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log("✅ Evaluación guardada correctamente");
+        alert(`✅ Evaluación guardada correctamente para ${candidatoActualNombre}`);
+        
+        // Cerrar el modal
+        const modalEl = document.getElementById("modalSeguimiento");
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        // Opcional: Recargar la tabla para mostrar datos actualizados
+        // location.reload();
+      } else {
+        alert(`❌ Error: ${data.error || 'No se pudo guardar la evaluación'}`);
+      }
+    } catch (error) {
+      console.error("❌ Error al guardar evaluación:", error);
+      alert("❌ Error al conectar con el servidor");
+    }
+  });
 
   // ============================
   // ♻️ NO RESTAURAR RESULTADOS AUTOMÁTICAMENTE
   // ============================
-  // La tabla siempre debe iniciar sin análisis previo
   console.log("✅ Sistema listo para análisis manual");
 });

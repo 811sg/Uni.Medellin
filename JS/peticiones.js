@@ -25,25 +25,53 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ============================
-  // ⚙️ FUNCIÓN PARA ACTUALIZAR TABLA CON IA
+  // ⚙️ FUNCIÓN PARA ACTUALIZAR TABLA CON PUNTAJES
   // ============================
   function actualizarTablaConPuntajes(resultados) {
     const filas = tablaBody.querySelectorAll("tr");
+    
     filas.forEach((fila) => {
       const nombreCandidato = fila.querySelector("strong")?.textContent.trim().toLowerCase();
       const resultadoIA = resultados.find((r) =>
-        r.nombre.toLowerCase().includes(nombreCandidato)
+        r.nombre.toLowerCase().includes(nombreCandidato) || 
+        nombreCandidato.includes(r.nombre.toLowerCase())
       );
+      
+      // 🎯 SOLO actualizar la columna de PUNTAJE (columna 3)
       const celdaPuntaje = fila.querySelector("td:nth-child(3)");
-      if (resultadoIA) {
+      
+      if (resultadoIA && celdaPuntaje) {
+        // 🔥 Python ya envía el puntaje como porcentaje (51.02, 50.37, etc.)
+        // NO multiplicar por nada
+        const puntajePorcentaje = resultadoIA.puntaje;
+        
         celdaPuntaje.innerHTML = `
           <div class="progress" style="height: 8px;">
-            <div class="progress-bar bg-success" style="width: ${(resultadoIA.puntaje * 100).toFixed(1)}%;"></div>
+            <div class="progress-bar bg-success" style="width: ${Math.min(puntajePorcentaje, 100)}%;"></div>
           </div>
-          <small class="text-muted"><strong>${(resultadoIA.puntaje * 100).toFixed(1)}%</strong></small>
+          <small class="text-muted"><strong>${puntajePorcentaje.toFixed(1)}%</strong></small>
         `;
-      } else {
-        celdaPuntaje.innerHTML = `<small class="text-muted">Sin resultado</small>`;
+      } else if (celdaPuntaje) {
+        celdaPuntaje.innerHTML = `<small class="text-muted">N/A</small>`;
+      }
+
+      // 🔒 GARANTIZAR que los botones NUNCA cambien
+      const celdaAcciones = fila.querySelector("td:nth-child(5)");
+      if (celdaAcciones) {
+        const tieneEvaluar = celdaAcciones.querySelector(".btn-evaluar");
+        
+        if (!tieneEvaluar) {
+          celdaAcciones.innerHTML = `
+            <button class="btn btn-sm btn-evaluar me-1">Evaluar</button>
+            <button class="btn btn-sm btn-outline-secondary me-1">Asignar</button>
+            <button class="btn btn-sm btn-outline-dark btn-seguimiento">Seguimiento</button>          `;
+        }
+      }
+
+      // 🔒 La columna ESTADO siempre debe estar "Pendiente"
+      const celdaEstado = fila.querySelector("td:nth-child(4)");
+      if (celdaEstado && !celdaEstado.querySelector('.badge')) {
+        celdaEstado.innerHTML = `<span class="badge bg-light text-dark border">Pendiente</span>`;
       }
     });
   }
@@ -57,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
     e.stopImmediatePropagation();
     console.log("🧠 Botón IA presionado — iniciando análisis...");
 
-    // Bloquear recarga manual mientras analiza
     window.onbeforeunload = () => false;
 
     botonIA.disabled = true;
@@ -66,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <span class="spinner-border spinner-border-sm me-2"></span> Analizando...
     `;
 
-    // Mostrar progreso en tabla
     tablaBody.querySelectorAll("tr").forEach((fila) => {
       const celdaPuntaje = fila.querySelector("td:nth-child(3)");
       if (celdaPuntaje) {
@@ -90,7 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (Array.isArray(data) && data.length > 0) {
         actualizarTablaConPuntajes(data);
-        localStorage.setItem("resultadosIA", JSON.stringify(data));
       } else {
         alert("⚠️ No se encontraron coincidencias con la IA.");
       }
@@ -104,17 +129,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ============================
-  // ♻️ RESTAURAR RESULTADOS GUARDADOS
-  // ============================
-  const prevResults = localStorage.getItem("resultadosIA");
-  if (prevResults) {
-    try {
-      const data = JSON.parse(prevResults);
-      actualizarTablaConPuntajes(data);
-      console.log("♻️ Resultados IA restaurados.");
-    } catch (err) {
-      console.warn("⚠️ Error al restaurar resultados IA:", err);
+// ============================
+// 🪟 MODAL DE SEGUIMIENTO (solo vista)
+// ============================
+document.body.addEventListener("click", (e) => {
+  if (e.target.classList.contains("btn-seguimiento")) {
+    const fila = e.target.closest("tr");
+    const nombre = fila?.querySelector("strong")?.textContent.trim() || "Candidato";
+
+    const titulo = document.getElementById("modalSeguimientoLabel");
+    if (titulo) titulo.textContent = `Evaluación de Candidato: ${nombre}`;
+
+    const modalEl = document.getElementById("modalSeguimiento");
+    if (modalEl) {
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
     }
   }
+
+  // 🔹 Cerrar el modal al hacer clic en Guardar
+  if (e.target.id === "guardarEvaluacion") {
+    const modalEl = document.getElementById("modalSeguimiento");
+    const modal = bootstrap.Modal.getInstance(modalEl); // Obtener la instancia activa
+    if (modal) {
+      alert("Evaluación guardada correctamente ✅");
+      modal.hide(); // 🔸 Cierra solo este modal
+    }
+  }
+});
+
+
+  // ============================
+  // ♻️ NO RESTAURAR RESULTADOS AUTOMÁTICAMENTE
+  // ============================
+  // La tabla siempre debe iniciar sin análisis previo
+  console.log("✅ Sistema listo para análisis manual");
 });

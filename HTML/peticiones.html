@@ -94,6 +94,36 @@
     </div>
   </div>
 
+<!-- Modal de Seguimiento / Evaluación -->
+<div class="modal fade" id="modalSeguimiento" tabindex="-1" aria-labelledby="modalSeguimientoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 14px;">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold" id="modalSeguimientoLabel">Evaluación de Candidato</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="puntaje" class="form-label">Puntaje (1-100)</label>
+            <input type="number" id="puntaje" class="form-control" placeholder="Ej. 85" min="1" max="100">
+          </div>
+          <div class="mb-3">
+            <label for="comentarios" class="form-label">Comentario</label>
+            <textarea id="comentarios" class="form-control" rows="3" placeholder="Escribe tu observación..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="guardarEvaluacion" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
   <!-- FOOTER -->
   <footer class="footer-bottom mt-5">
     <p>Universidad de Medellín 2025. All copy rights.</p>
@@ -105,11 +135,11 @@
     </div>
   </footer>
 
+
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/JS/rolControl.js"></script>
   <script src="/JS/p-profesores.js"></script>
   <script src="/JS/peticiones.js"></script>
-
 </body>
 </html>

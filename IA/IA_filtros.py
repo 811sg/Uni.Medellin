@@ -51,14 +51,22 @@ def extraer_texto_pdf(ruta):
 
 
 def extraer_nombre(texto, archivo):
-    """Extrae el nombre del candidato desde el texto o el nombre del archivo."""
-    match = re.search(r'nombre\s*(?:completo)?:\s*([a-záéíóúñ\s]+?)(?:\n|código|correo|teléfono|email)', texto.lower())
+    """
+    Extrae el nombre completo del candidato (igual que el original).
+    """
+    match = re.search(
+        r'nombre\s*(?:completo)?:\s*([a-záéíóúñ\s]+?)(?:\n|código|correo|teléfono|email)',
+        texto.lower()
+    )
+    
     if match:
         nombre = match.group(1).strip().title()
         nombre = re.sub(r'\s+', ' ', nombre)
         return nombre
-
+    
+    # Si no encuentra el nombre en el texto, usar el nombre del archivo
     nombre = os.path.splitext(os.path.basename(archivo))[0]
+    nombre = re.sub(r'^\d+_', '', nombre)  # Quitar timestamp
     nombre = re.sub(r'^(cv|hoja|vida)_?', '', nombre, flags=re.I)
     nombre = nombre.replace('_', ' ').title()
     return nombre
@@ -73,7 +81,7 @@ def limpiar_texto(texto):
 
 
 def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
-    """Analiza los CVs de la carpeta según el perfil recibido."""
+    """Analiza los CVs según el perfil (CONFIGURACIÓN ORIGINAL)."""
     print("=" * 85)
     print(" SISTEMA DE SELECCIÓN INTELIGENTE DE MONITORES ".center(85))
     print("=" * 85)
@@ -100,10 +108,12 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
 
         texto = extraer_texto_pdf(ruta)
         if texto:
+            nombre_extraido = extraer_nombre(texto, pdf)
+            texto_limpio = limpiar_texto(texto)
             candidatos.append({
-                'Nombre': extraer_nombre(texto, pdf),
+                'Nombre': nombre_extraido,
                 'Archivo': pdf,
-                'Texto': limpiar_texto(texto)
+                'Texto': texto_limpio
             })
             print("[OK]")
         else:
@@ -118,22 +128,20 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
     df = pd.DataFrame(candidatos)
 
     # =======================================
-    # 🧠 ANÁLISIS DE SIMILITUD (IA REAL)
+    # 🧠 ANÁLISIS - CONFIGURACIÓN ORIGINAL
     # =======================================
     print("[*] Analizando con IA (TF-IDF + Similitud de Coseno)...")
 
     perfil_limpio = limpiar_texto(perfil)
     textos = df['Texto'].tolist() + [perfil_limpio]
 
-    # 🔹 Vectorizador más robusto: considera palabras y frases
-    vectorizer = TfidfVectorizer(max_features=500, ngram_range=(1, 2))
+    # 🔥 CONFIGURACIÓN EXACTA DEL ORIGINAL
+    vectorizer = TfidfVectorizer(max_features=100, ngram_range=(1, 2))
     matriz_tfidf = vectorizer.fit_transform(textos)
 
-    # 🔹 Calcular similitud entre perfil y CVs
     similitudes = cosine_similarity(matriz_tfidf[-1], matriz_tfidf[:-1]).flatten()
     df['Score'] = similitudes
 
-    # 🔹 Ordenar candidatos de mayor a menor similitud
     df = df.sort_values('Score', ascending=False).reset_index(drop=True)
 
     print(f"[OK] Análisis completado\n")
@@ -149,6 +157,11 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
         print(f"      Score: {row['Score']:.4f} ({int(row['Score']*100)}%) [{barra}]")
         print(f"      Archivo: {row['Archivo']}\n")
 
+    print("=" * 85)
+    print(f" RECOMENDADO: {df.iloc[0]['Nombre']} (Score: {df.iloc[0]['Score']:.4f}) ".center(85))
+    print("=" * 85)
+    print()
+
     df[['Nombre', 'Archivo', 'Score']].to_csv('ranking_monitores.csv', index=False)
     print("[*] Resultados guardados en: ranking_monitores.csv\n")
 
@@ -156,7 +169,7 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
 
 
 # =======================================
-# 🌐 SERVIDOR FLASK (Integración con Node.js)
+# 🌐 SERVIDOR FLASK
 # =======================================
 app = Flask(__name__)
 CORS(app)
@@ -169,31 +182,43 @@ def analizar():
         if perfil is None or len(perfil.strip()) < 20:
             perfil = perfil_ideal
 
-        print(f"\n[*] Análisis recibido desde Node.js con perfil:\n{perfil}\n")
+        print(f"\n[*] 🤖 Análisis recibido desde Node.js")
+        print(f"[*] Perfil: {perfil[:80].strip()}...\n")
+        
         df = analizar_candidatos(perfil)
 
         if df is None or df.empty:
             print("[⚠️] No se encontraron CVs válidos.")
             return jsonify({"error": "No se encontraron CVs válidos."}), 400
 
+        # 🔥 DEVOLVER SCORES YA MULTIPLICADOS POR 100 (COMO PORCENTAJE)
         resultados = [
             {
                 "nombre": row["Nombre"],
                 "archivo": row["Archivo"],
-                "puntaje": round(float(row["Score"]) * 100, 2)
+                "puntaje": round(float(row["Score"]) * 100, 2)  # ✅ Multiplicar por 100
             }
             for _, row in df.iterrows()
         ]
 
-        print(f"[✅] Resultados generados ({len(resultados)} candidatos).\n")
+        print(f"[✅] Resultados generados ({len(resultados)} candidatos):")
+        for r in resultados:
+            print(f"   • {r['nombre']}: {r['puntaje']:.2f}%")
+        print()
+        
         return jsonify(resultados)
 
     except Exception as e:
         print(f"[❌] Error al analizar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
     print("\n🌐 SERVIDOR IA ACTIVO — CONECTADO A NODE.JS")
-    print("📂 Carpeta de análisis:", os.path.abspath(CARPETA_CVS))
-    app.run(host="127.0.0.1", port=5000)
+    print(f"📂 Carpeta de análisis: {os.path.abspath(CARPETA_CVS)}")
+    print("🔗 Endpoint: http://127.0.0.1:5000/analizar")
+    print("=" * 85)
+    print()
+    app.run(host="127.0.0.1", port=5000, debug=False)

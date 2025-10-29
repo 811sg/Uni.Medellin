@@ -268,25 +268,35 @@ app.post("/evaluar-candidato/:id", async (req, res) => {
 app.post("/agregar-seguimiento/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { seguimiento } = req.body;
+    const { puntaje, comentario } = req.body;
     
-    if (!seguimiento || seguimiento.trim() === "") {
-      return res.status(400).json({ error: "El seguimiento no puede estar vacío" });
+    // Validaciones
+    if (!comentario || comentario.trim() === "") {
+      return res.status(400).json({ error: "El comentario no puede estar vacío" });
+    }
+    
+    if (!puntaje || puntaje < 1 || puntaje > 100) {
+      return res.status(400).json({ error: "El puntaje debe estar entre 1 y 100" });
     }
     
     await pool.query(
       `UPDATE hojas_de_vida 
-       SET seguimiento = $1 
-       WHERE id = $2`,
-      [seguimiento, id]
+       SET seguimiento = $1,
+           puntaje_manual = $2
+       WHERE id = $3`,
+      [comentario, puntaje, id]
     );
     
-    console.log(`✅ Seguimiento agregado al candidato ID ${id}`);
-    res.status(200).json({ mensaje: "Seguimiento guardado correctamente" });
+    console.log(`✅ Seguimiento agregado al candidato ID ${id} - Puntaje: ${puntaje}`);
+    res.status(200).json({ 
+      mensaje: "Evaluación guardada correctamente",
+      puntaje,
+      comentario 
+    });
     
   } catch (error) {
     console.error("❌ Error al agregar seguimiento:", error);
-    res.status(500).json({ error: "Error al guardar el seguimiento" });
+    res.status(500).json({ error: "Error al guardar la evaluación" });
   }
 });
 
@@ -348,6 +358,7 @@ app.get("/hojas-de-vida", async (req, res) => {
         archivo_nombre, 
         estado, 
         puntaje_ia,
+        puntaje_manual,
         seguimiento,
         asignado_por,
         fecha_asignacion,
@@ -389,6 +400,66 @@ app.post("/guardar-puntajes-ia", async (req, res) => {
   } catch (error) {
     console.error("❌ Error al guardar puntajes:", error);
     res.status(500).json({ error: "Error al guardar los puntajes" });
+  }
+});
+
+// =====================================================
+// 🔄 RESETEAR TODOS LOS ESTADOS (solo para testing)
+// =====================================================
+app.post("/reset-estados", async (req, res) => {
+  try {
+    await pool.query(`
+      UPDATE hojas_de_vida 
+      SET estado = 'Pendiente',
+          fecha_evaluacion = NULL,
+          asignado_por = NULL,
+          fecha_asignacion = NULL,
+          puntaje_manual = NULL,
+          seguimiento = NULL
+    `);
+    
+    console.log("🔄 Todos los estados reseteados a Pendiente");
+    res.status(200).json({ 
+      mensaje: "Estados reseteados correctamente",
+      accion: "Todos los candidatos vuelven a estado Pendiente" 
+    });
+    
+  } catch (error) {
+    console.error("❌ Error al resetear estados:", error);
+    res.status(500).json({ error: "Error al resetear los estados" });
+  }
+});
+
+// =====================================================
+// 🗑️ QUITAR ASIGNACIÓN (mantener evaluaciones)
+// =====================================================
+app.post("/quitar-asignacion", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      UPDATE hojas_de_vida 
+      SET estado = CASE 
+                     WHEN fecha_evaluacion IS NOT NULL THEN 'Evaluado'
+                     ELSE 'Pendiente'
+                   END,
+          asignado_por = NULL,
+          fecha_asignacion = NULL
+      WHERE estado = 'Asignado'
+      RETURNING nombre
+    `);
+    
+    if (result.rows.length > 0) {
+      console.log(`🗑️ Asignación removida de: ${result.rows[0].nombre}`);
+      res.status(200).json({ 
+        mensaje: "Asignación removida correctamente",
+        candidato: result.rows[0].nombre
+      });
+    } else {
+      res.status(404).json({ mensaje: "No hay ningún candidato asignado" });
+    }
+    
+  } catch (error) {
+    console.error("❌ Error al quitar asignación:", error);
+    res.status(500).json({ error: "Error al quitar la asignación" });
   }
 });
 

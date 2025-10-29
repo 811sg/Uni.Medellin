@@ -416,4 +416,84 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("📄 Cargando candidatos...");
   await cargarCandidatos();
   console.log("✅ Sistema listo");
+  
+  // =============================
+  // 🔄 BOTONES DE TESTING
+  // =============================
+  
+  // Botón: Resetear todos los estados
+  const btnResetEstados = document.getElementById("btn-reset-estados");
+  if (btnResetEstados) {
+    btnResetEstados.addEventListener("click", async () => {
+      const confirmar = confirm(
+        "⚠️ ¿Estás seguro?\n\n" +
+        "Esto reseteará TODOS los candidatos a estado 'Pendiente'.\n" +
+        "Se perderán las evaluaciones y asignaciones."
+      );
+      
+      if (!confirmar) return;
+      
+      btnResetEstados.disabled = true;
+      btnResetEstados.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Reseteando...';
+      
+      try {
+        const res = await fetch("http://localhost:3001/reset-estados", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        
+        if (res.ok) {
+          alert("✅ Estados reseteados correctamente. Recargando página...");
+          location.reload();
+        } else {
+          alert("❌ Error al resetear estados");
+        }
+      } catch (error) {
+        console.error("❌ Error:", error);
+        alert("❌ Error al conectar con el servidor");
+      } finally {
+        btnResetEstados.disabled = false;
+        btnResetEstados.innerHTML = '<i class="bi bi-arrow-counterclockwise me-1"></i> Resetear Estados';
+      }
+    });
+  }
+  
+  // Botón: Quitar asignación (mantener evaluaciones)
+  const btnQuitarAsignacion = document.getElementById("btn-quitar-asignacion");
+  if (btnQuitarAsignacion) {
+    btnQuitarAsignacion.addEventListener("click", async () => {
+      const confirmar = confirm(
+        "¿Quitar la asignación actual?\n\n" +
+        "Esto permitirá asignar a otro candidato.\n" +
+        "Las evaluaciones se mantendrán."
+      );
+      
+      if (!confirmar) return;
+      
+      btnQuitarAsignacion.disabled = true;
+      btnQuitarAsignacion.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Quitando...';
+      
+      try {
+        const res = await fetch("http://localhost:3001/quitar-asignacion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert(`✅ ${data.mensaje}\n\nRecargando página...`);
+          location.reload();
+        } else {
+          alert(`⚠️ ${data.mensaje}`);
+        }
+      } catch (error) {
+        console.error("❌ Error:", error);
+        alert("❌ Error al conectar con el servidor");
+      } finally {
+        btnQuitarAsignacion.disabled = false;
+        btnQuitarAsignacion.innerHTML = '<i class="bi bi-x-circle me-1"></i> Quitar Asignación';
+      }
+    });
+  }
 });

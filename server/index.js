@@ -10,7 +10,7 @@ import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import fetch from "node-fetch"; // 🔹 Para comunicación con Flask
+import fetch from "node-fetch";
 
 // ✅ Configurar __dirname (necesario en módulos ES)
 const __filename = fileURLToPath(import.meta.url);
@@ -45,7 +45,7 @@ const upload = multer({ storage: storage });
 // =====================
 app.post("/upload-cv", upload.single("cv"), async (req, res) => {
   try {
-    console.log("📥 Petición recibida en /upload-cv"); // LOG
+    console.log("📥 Petición recibida en /upload-cv");
     const file = req.file;
     const nombre = req.body.nombre;
     const correo = req.body.correo;
@@ -65,7 +65,6 @@ app.post("/upload-cv", upload.single("cv"), async (req, res) => {
     await pool.query(query, [nombre, correo, file.originalname, file.buffer]);
 
     // 🧠 Guardar también el archivo físicamente en IA/hojas_de_vida/
-    // Usamos __dirname absoluto para asegurar que funcione desde /server
     const outputDir = path.join(__dirname, "../IA/hojas_de_vida");
 
     // Crear carpeta si no existe
@@ -74,12 +73,13 @@ app.post("/upload-cv", upload.single("cv"), async (req, res) => {
       console.log("📁 Carpeta creada correctamente en:", outputDir);
     }
 
-    // Guardar archivo con nombre único
-    const safeFileName = `${Date.now()}_${file.originalname.replace(/\s+/g, "_")}`;
+    // 🔥 GUARDAR CON NOMBRE ORIGINAL (SIN TIMESTAMP)
+    const safeFileName = file.originalname.replace(/\s+/g, "_");
     const filePath = path.join(outputDir, safeFileName);
 
+    // ⚠️ Si existe, sobrescribir
     fs.writeFileSync(filePath, file.buffer);
-    console.log(`✅ Hoja de vida guardada en: ${filePath}`);
+    console.log(`✅ Hoja de vida guardada como: ${safeFileName}`);
 
     res.status(200).send("✅ Hoja de vida cargada con éxito y guardada para análisis IA.");
   } catch (error) {
@@ -87,7 +87,6 @@ app.post("/upload-cv", upload.single("cv"), async (req, res) => {
     res.status(500).send("❌ Error al subir la hoja de vida");
   }
 });
-
 // =====================
 // 📥 DESCARGAR HOJA DE VIDA
 // =====================
@@ -197,7 +196,6 @@ app.get("/hojas-de-vida", async (req, res) => {
 // =====================
 app.post("/analizar-cvs", async (req, res) => {
   try {
-    // Si no se envía un perfil desde el frontend, usamos el perfil por defecto
     const perfilPorDefecto = `
     Buscamos estudiante para monitoría de Análisis de Datos con:
     - Dominio de Python (Pandas, NumPy, Matplotlib)
@@ -208,10 +206,9 @@ app.post("/analizar-cvs", async (req, res) => {
     - Capacidad para explicar conceptos complejos claramente
     `;
 
-    // Si el frontend envía algo, se usa eso, de lo contrario el texto anterior
     const perfil = req.body.perfil || perfilPorDefecto;
 
-    console.log("🤖 Perfil enviado a IA:", perfil.substring(0, 80) + "...");
+    console.log("🤖 Enviando solicitud a Flask...");
 
     const response = await fetch("http://127.0.0.1:5000/analizar", {
       method: "POST",
@@ -219,14 +216,30 @@ app.post("/analizar-cvs", async (req, res) => {
       body: JSON.stringify({ perfil }),
     });
 
+    if (!response.ok) {
+      throw new Error(`Flask respondió con status ${response.status}`);
+    }
+
     const data = await response.json();
-    res.json(data);
+    
+    console.log("✅ Respuesta de Flask recibida:");
+    console.log(data);
+    
+    // 🔥 IMPORTANTE: Convertir puntajes a porcentaje si vienen como decimal
+    const resultadosFormateados = data.map(item => ({
+      nombre: item.nombre,
+      archivo: item.archivo,
+      puntaje: item.puntaje > 1 ? item.puntaje : item.puntaje * 100
+    }));
+    
+    console.log("📊 Resultados formateados:", resultadosFormateados);
+    
+    res.json(resultadosFormateados);
   } catch (error) {
     console.error("❌ Error al conectar con la IA:", error);
     res.status(500).send("❌ Error al conectar con la IA.");
   }
 });
-
 
 // =====================
 // 🚀 INICIAR SERVIDOR

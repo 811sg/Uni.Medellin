@@ -51,16 +51,43 @@ def extraer_texto_pdf(ruta):
 
 
 def extraer_nombre(texto, archivo):
-    """Extrae el nombre del candidato desde el texto o el nombre del archivo."""
-    match = re.search(r'nombre\s*(?:completo)?:\s*([a-záéíóúñ\s]+?)(?:\n|código|correo|teléfono|email)', texto.lower())
+    """
+    Extrae SOLO nombre + primer apellido del candidato.
+    Ejemplo: "Camilo Herrera Gómez" → "Camilo Herrera"
+    """
+    # Buscar patrón "Nombre Completo: Camilo Herrera Gómez"
+    match = re.search(
+        r'nombre\s*(?:completo)?:\s*([a-záéíóúñ\s]+?)(?:\n|código|correo|teléfono|email)',
+        texto.lower()
+    )
+    
     if match:
-        nombre = match.group(1).strip().title()
-        nombre = re.sub(r'\s+', ' ', nombre)
-        return nombre
-
+        nombre_completo = match.group(1).strip().title()
+        nombre_completo = re.sub(r'\s+', ' ', nombre_completo)
+        
+        # 🔥 IMPORTANTE: Tomar SOLO las primeras 2 palabras (nombre + apellido)
+        partes = nombre_completo.split()
+        if len(partes) >= 2:
+            nombre_corto = f"{partes[0]} {partes[1]}"
+            print(f"   📝 Nombre extraído del PDF: '{nombre_completo}' → '{nombre_corto}'")
+            return nombre_corto
+        
+        return nombre_completo
+    
+    # Si no encuentra el nombre en el texto, usar el nombre del archivo
+    # Eliminar timestamp y extensión
     nombre = os.path.splitext(os.path.basename(archivo))[0]
+    nombre = re.sub(r'^\d+_', '', nombre)  # Quitar timestamp inicial
     nombre = re.sub(r'^(cv|hoja|vida)_?', '', nombre, flags=re.I)
     nombre = nombre.replace('_', ' ').title()
+    
+    # También acortar el nombre del archivo
+    partes = nombre.split()
+    if len(partes) >= 2:
+        nombre_corto = f"{partes[0]} {partes[1]}"
+        print(f"   📝 Nombre del archivo: '{nombre}' → '{nombre_corto}'")
+        return nombre_corto
+    
     return nombre
 
 
@@ -100,12 +127,14 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
 
         texto = extraer_texto_pdf(ruta)
         if texto:
+            nombre_extraido = extraer_nombre(texto, pdf)
+            texto_limpio = limpiar_texto(texto)
             candidatos.append({
-                'Nombre': extraer_nombre(texto, pdf),
+                'Nombre': nombre_extraido,
                 'Archivo': pdf,
-                'Texto': limpiar_texto(texto)
+                'Texto': texto_limpio
             })
-            print("[OK]")
+            print(f"[OK] - {len(texto_limpio.split())} palabras procesadas")
         else:
             print("[ERROR]")
 
@@ -118,15 +147,24 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
     df = pd.DataFrame(candidatos)
 
     # =======================================
-    # 🧠 ANÁLISIS DE SIMILITUD (IA REAL)
+    # 🧠 ANÁLISIS DE SIMILITUD (IA MEJORADA)
     # =======================================
     print("[*] Analizando con IA (TF-IDF + Similitud de Coseno)...")
 
     perfil_limpio = limpiar_texto(perfil)
+    print(f"[*] Palabras clave del perfil: {len(perfil_limpio.split())}")
+    
     textos = df['Texto'].tolist() + [perfil_limpio]
 
-    # 🔹 Vectorizador más robusto: considera palabras y frases
-    vectorizer = TfidfVectorizer(max_features=500, ngram_range=(1, 2))
+    # 🔥 CONFIGURACIÓN MEJORADA DEL VECTORIZADOR
+    vectorizer = TfidfVectorizer(
+        max_features=1000,        # Más features para mejor precisión
+        ngram_range=(1, 3),       # Considera frases de 1-3 palabras
+        min_df=1,                 # Incluir términos aunque aparezcan 1 vez
+        sublinear_tf=True,        # Escalado logarítmico
+        strip_accents='unicode'   # Normalizar acentos
+    )
+    
     matriz_tfidf = vectorizer.fit_transform(textos)
 
     # 🔹 Calcular similitud entre perfil y CVs
@@ -146,11 +184,11 @@ def analizar_candidatos(perfil, carpeta=CARPETA_CVS):
         prefijo = ["[1]", "[2]", "[3]"][i] if i < 3 else f"[{i+1}]"
         barra = "█" * int(row['Score'] * 50)
         print(f"{prefijo} {row['Nombre']}")
-        print(f"      Score: {row['Score']:.4f} ({int(row['Score']*100)}%) [{barra}]")
+        print(f"      Score: {row['Score']:.4f} ({row['Score']*100:.1f}%) [{barra}]")
         print(f"      Archivo: {row['Archivo']}\n")
 
-    df[['Nombre', 'Archivo', 'Score']].to_csv('ranking_monitores.csv', index=False)
     print("[*] Resultados guardados en: ranking_monitores.csv\n")
+    df[['Nombre', 'Archivo', 'Score']].to_csv('ranking_monitores.csv', index=False)
 
     return df
 
@@ -169,31 +207,43 @@ def analizar():
         if perfil is None or len(perfil.strip()) < 20:
             perfil = perfil_ideal
 
-        print(f"\n[*] Análisis recibido desde Node.js con perfil:\n{perfil}\n")
+        print(f"\n[*] 🤖 Análisis recibido desde Node.js")
+        print(f"[*] Perfil: {perfil[:80].strip()}...\n")
+        
         df = analizar_candidatos(perfil)
 
         if df is None or df.empty:
             print("[⚠️] No se encontraron CVs válidos.")
             return jsonify({"error": "No se encontraron CVs válidos."}), 400
 
+        # 🔥 Devolver scores sin multiplicar (como decimales)
         resultados = [
             {
                 "nombre": row["Nombre"],
                 "archivo": row["Archivo"],
-                "puntaje": round(float(row["Score"]) * 100, 2)
+                "puntaje": round(float(row["Score"]), 4)
             }
             for _, row in df.iterrows()
         ]
 
-        print(f"[✅] Resultados generados ({len(resultados)} candidatos).\n")
+        print(f"[✅] Resultados generados ({len(resultados)} candidatos):")
+        for r in resultados:
+            print(f"   • {r['nombre']}: {r['puntaje']*100:.2f}%")
+        print()
+        
         return jsonify(resultados)
 
     except Exception as e:
         print(f"[❌] Error al analizar: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
     print("\n🌐 SERVIDOR IA ACTIVO — CONECTADO A NODE.JS")
-    print("📂 Carpeta de análisis:", os.path.abspath(CARPETA_CVS))
-    app.run(host="127.0.0.1", port=5000)
+    print(f"📂 Carpeta de análisis: {os.path.abspath(CARPETA_CVS)}")
+    print("🔗 Endpoint: http://127.0.0.1:5000/analizar")
+    print("=" * 85)
+    print()
+    app.run(host="127.0.0.1", port=5000, debug=False)

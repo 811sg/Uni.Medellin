@@ -8,26 +8,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ============================
   // 📥 OBTENER CORREO DEL PROFESOR
   // ============================
-  const profesorCorreo = localStorage.getItem('userEmail') || 'profesor@soydocente.com';
-  console.log(`👤 Profesor actual: ${profesorCorreo}`);
+const profesorCorreo = localStorage.getItem('userEmail') || 'profesor@soydocente.com';
+console.log(`🔍 Buscando monitores para: ${profesorCorreo}`);
+console.log(`📧 Email en localStorage:`, localStorage.getItem('userEmail'));  console.log(`👤 Profesor actual: ${profesorCorreo}`);
   
   // ============================
   // 📋 CARGAR MONITORES ACTIVOS
   // ============================
-  async function cargarMonitoresActivos() {
+    async function cargarMonitoresActivos() {
     try {
-      console.log("📡 Obteniendo monitores activos...");
-      
-      const res = await fetch(`http://localhost:3001/monitores-activos/${encodeURIComponent(profesorCorreo)}`);
-      
-      if (!res.ok) {
+        console.log("📡 Obteniendo monitores activos...");
+        console.log(`🔗 URL: http://localhost:3001/monitores-activos/${encodeURIComponent(profesorCorreo)}`);
+        
+        const res = await fetch(`http://localhost:3001/monitores-activos/${encodeURIComponent(profesorCorreo)}`);
+        
+        if (!res.ok) {
         throw new Error(`Error HTTP: ${res.status}`);
-      }
-      
-      const monitores = await res.json();
-      
-      console.log(`✅ Monitores encontrados: ${monitores.length}`);
-      
+        }
+        
+        const monitores = await res.json();
+        
+        console.log(`✅ Monitores encontrados: ${monitores.length}`);
+        console.log(`📊 Datos recibidos:`, monitores);
+            
       // Ocultar loading
       loadingState.style.display = "none";
       

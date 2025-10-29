@@ -7,6 +7,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   let candidatosData = []; // Guardar datos completos de candidatos
   let yaHayAsignado = false; // Control para saber si ya hay alguien asignado
+    // 🔒 OBTENER DATOS DEL PROFESOR DESDE LOCALSTORAGE
+  const profesorCorreo = localStorage.getItem('userEmail') || 'profesor@soydocente.com';
+  const profesorNombre = localStorage.getItem('userName') || 'Profesor';
+
+  console.log(`👤 Profesor identificado: ${profesorNombre} (${profesorCorreo})`);
 
   // 🔥 BLOQUEAR CUALQUIER RECARGA DE PÁGINA
   window.addEventListener("beforeunload", (e) => {
@@ -29,14 +34,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   // =============================
   async function cargarCandidatos() {
     try {
+            console.log("📡 Solicitando hojas de vida al servidor...");
+
       const res = await fetch("http://localhost:3001/hojas-de-vida");
       const data = await res.json();
-      
+
+      console.log("✅ Respuesta recibida:", data);
+      console.log(`📊 Total de hojas de vida: ${data.length}`);
+
       candidatosData = data; // Guardar datos completos
 
       // Verificar si ya hay alguien asignado
       yaHayAsignado = data.some(cv => cv.estado === 'Asignado');
       console.log(`📊 Ya hay asignado: ${yaHayAsignado}`);
+    
 
       tablaBody.innerHTML = "";
 
@@ -48,8 +59,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         data.forEach((cv) => {
           const nombreLimpio = cv.nombre.trim().replace(/\s+/g, ' ');
           const estado = cv.estado || 'Pendiente';
-          const puntaje = cv.puntaje_ia ? `${cv.puntaje_ia.toFixed(1)}%` : 'N/A';
-          
+          // 🔒 NO mostrar puntajes al cargar, solo después del análisis IA
+          const puntaje = 'N/A';
           // Determinar color del badge según estado
           let badgeClass = 'bg-light text-dark border';
           if (estado === 'Evaluado') badgeClass = 'bg-info text-white';
@@ -167,8 +178,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                   // Obtener nombre del profesor (si lo tienes guardado)
           const profesorNombre = localStorage.getItem('userName') || 'Profesor';
 
-          try {
-            const res = await fetch(`http://localhost:3001/asignar-monitor/${candidatoId}`, {
+          console.log(`📧 Usando correo del profesor: ${profesorCorreo}`);
+
+            try {
+              const res = await fetch(`http://localhost:3001/asignar-monitor/${candidatoId}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 

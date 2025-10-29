@@ -234,6 +234,8 @@ app.post("/analizar-cvs", async (req, res) => {
 // =====================================================
 app.get("/hojas-de-vida", async (req, res) => {
   try {
+    console.log("📡 Petición GET /hojas-de-vida recibida");
+    
     const result = await pool.query(`
       SELECT 
         id, 
@@ -255,10 +257,26 @@ app.get("/hojas-de-vida", async (req, res) => {
         END DESC
     `);
     
+    console.log(`✅ Hojas de vida encontradas: ${result.rows.length}`);
+    
+    if (result.rows.length === 0) {
+      console.warn("⚠️ No hay hojas de vida en la base de datos");
+    } else {
+      console.log("📊 Primeras 3 filas:");
+      result.rows.slice(0, 3).forEach(row => {
+        console.log(`  - ID: ${row.id}, Nombre: ${row.nombre}, Estado: ${row.estado}`);
+      });
+    }
+    
     res.json(result.rows);
+    
   } catch (error) {
     console.error("❌ Error al obtener hojas de vida:", error);
-    res.status(500).send("❌ Error al obtener las hojas de vida");
+    console.error("❌ Stack trace:", error.stack);
+    res.status(500).json({ 
+      error: "Error al obtener las hojas de vida",
+      detalle: error.message 
+    });
   }
 });
 
@@ -561,8 +579,9 @@ app.get("/monitores-activos/:profesorCorreo", async (req, res) => {
   try {
     const { profesorCorreo } = req.params;
     
-    console.log(`📋 Buscando monitores activos para: ${profesorCorreo}`);
-    
+      console.log(`📋 GET /monitores-activos recibido`);
+      console.log(`🔍 Buscando monitores para: ${profesorCorreo}`);  
+
     const result = await pool.query(`
       SELECT 
         ma.id,
@@ -583,7 +602,11 @@ app.get("/monitores-activos/:profesorCorreo", async (req, res) => {
       ORDER BY ma.fecha_inicio DESC
     `, [profesorCorreo]);
     
-    console.log(`📋 Monitores activos encontrados: ${result.rows.length}`);
+    cconsole.log(`✅ Monitores encontrados en BD: ${result.rows.length}`);
+    if (result.rows.length > 0) {
+      console.log(`📋 Primer monitor:`, result.rows[0]);
+    }
+    
     res.json(result.rows);
     
   } catch (error) {
